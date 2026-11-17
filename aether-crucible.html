@@ -1181,6 +1181,7 @@ function damage(src,tgt,amt,o){
   if(!o.dot&&tgt.shieldHp>0){const ab=Math.min(tgt.shieldHp,amt);tgt.shieldHp-=ab;amt-=ab;if(ab>0)float(tgt,'ABSORBED','#fff2a8');if(tgt.shieldHp<=0){tgt.shieldT=0;fxFlash(chest(tgt),'#fff2a8',1.2,.25)}}
   if(!o.dot&&!blocked&&tgt.def.id==='aurel'&&o.proj){amt*=.7;const c=chest(tgt);['#ff5a5a','#ffb35a','#ffe96a','#7fe07f','#6fb6ff','#b07bff'].forEach(col=>emit(c,col,3,5));float(tgt,'REFRACTED','#fff2a8');for(const t of foesOf(tgt))if(hdist(t.pos,tgt.pos)<3.5)setStatus(t,'blind',.6)}
   if(!(netGuest()&&(tgt===P||tgt===E)))tgt.hp=Math.max(0,tgt.hp-amt);if(src&&src!==tgt&&!o.dot)tgt.lastHitBy=src;
+  if(tgt.veil>0&&!o.dot&&!blocked&&src!==tgt)veilBreak(tgt);
   if(relic&&relic.holder===tgt&&!o.dot&&!blocked&&amt>=3&&src)dropRelic(dirTo(src.pos,tgt.pos));
   if(!o.dot&&!blocked){tgt.hitChain=clock-(tgt.lastHitT||0)<.9?(tgt.hitChain||0)+1:1;tgt.lastHitT=clock;if(tgt.hitChain>=6&&tgt.hp>0){tgt.hitChain=0;tgt.iframes=.6;float(tgt,'BREAK FREE','#ffffff');if(src&&src!==tgt){const bd=dirTo(tgt.pos,src.pos);src.vel.x+=bd.x*6;src.vel.z+=bd.z*6}}}
   if(!o.dot){
@@ -2330,7 +2331,7 @@ KITS.aurel={
   passive:['Afterglow','Every fifth hit you land flashes, blinding the target for a split second.'],
   hud:f=>f.veil>0?(f.shim>0?'Shimmering · keep moving!':'Veiled · until you strike'):'Glow '+(f.glow||0)+' / 5',
   q:{n:'Prism Ray',d:'Fire an instant, concentrated beam of light that pierces foes. When it hits a pillar, wall or gong it refracts and splits into three beams.',cd:2.5,ai:[2,16],run(f){cast(f,.25);beam(f,chest(f),aim(f),22,1,12);snd('zap')}},
-  e:{n:'Glimmer Veil',d:'Bend light around yourself and turn 90% invisible until you attack, leaving a shimmering light decoy of yourself behind that shatters like glass when attacked. Your foe loses track of you. Attacking or using any other ability ends it; a punch from the veil deals 50% more. Stand still for 5 seconds and the light around you starts to shimmer, outlining you until you move again.',cd:6,ai:[3,14],run(f){spawnDecoy(f);f.veil=1;f.veilSw=false;float(f,'VANISHED','#fff2a8');emit(chest(f),'#fff2a8',20,3);snd('parry')}},
+  e:{n:'Glimmer Veil',d:'Bend light around yourself and vanish completely from your foe\'s sight. Attacking, using any other ability, or getting hit ends it; a punch from the veil deals 50% more. Stand still for 5 seconds and the light around you starts to shimmer, outlining you until you move again.',cd:6,ai:[3,14],run(f){f.veil=1;f.veilSw=false;float(f,'VANISHED','#fff2a8');emit(chest(f),'#fff2a8',20,3);snd('parry')}},
   r:{n:'Solar Flare',cost:100,d:'Signature. Detonate a flashbang of pure light. Every foe within 8 metres has their vision whited out, is stunned for 1 second and burned, and you heal.',run(f){fxFlash(chest(f),'#fffbe0',11,.55);fxRing(f.pos,'#fff2a8',.5,10,.5);fxColumn(f.pos,'#fffbe0',9,1.4,.4);for(const t of foesOf(f))if(hdist(t.pos,f.pos)<8){damage(f,t,10,{kb:6,up:3});setStatus(t,'blind',2);setStatus(t,'flashed',1);if(t===P||t.human)t.whiteT=1.8}f.hp=Math.min(f.maxhp,f.hp+12);tick('SOLAR FLARE','#fff2a8',f);snd('boom')}},
   update(f,dt){if(f.veil>0){if(f.st==='atk'||f.st==='heavy')f.veilSw=true;else if(f.veilSw){f.veil=0;f.veilSw=false}}
     if(f.veil>0){const hs=Math.hypot(f.vel.x,f.vel.z);f.stillT=hs<.8?(f.stillT||0)+dt:Math.max(0,(f.stillT||0)-dt*4);const was=f.shim||0;f.shim=clamp((f.stillT-5)/1.2,0,1);if(was===0&&f.shim>0)float(f,'SHIMMERING','#fff2c0')}else{f.stillT=0;f.shim=0}if(f.veil>0){f.invis=true;if(f===P&&Math.random()<.2*FR)emit(V(f.pos.x,.1,f.pos.z),'#fff2a8',1,.3,0,.5)}},
@@ -3230,7 +3231,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=74;
+const NET_VER=75;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
