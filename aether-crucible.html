@@ -1497,7 +1497,7 @@ function teleportFx(f){emit(chest(f),'#a07bff',18,4);fxFlash(chest(f),'#6b4bd8',
 function startVortex(f){if(f.en<40)return false;if(f.foe&&f.foe.def.id==='echo'&&hdist(f.pos,f.foe.pos)<15&&!f.mirrorEl)addMirror(f.foe,40);teleWind(f,'skill',.4);special(f,{dur:.4,pose:'windup',tele:'skill',update(f){const k=Math.pow(.8,FR);f.vel.x*=k;f.vel.z*=k},end(f,s,c){f.flash=0;f.flashCol=null;if(c)return;f.st='vortex';f.t=0;f.vt=0;f.vp=0;f.vStrikes=0;f.vf=0;f.vs=0;snd('spin');float(f,'VORTEX',EL[f.def.el].c);fxRing(f.pos,EL[f.def.el].c,.4,2.2,.35)}});emit(V(f.pos.x,.1,f.pos.z),EL[f.def.el].c,10,2,-.3);return true}
 function vortexUpdate(f,dt,inp){
   const el=f.mirrorEl||f.def.el,o=f.foe;f.t+=dt;f.en-=30*dt;
-  const mv=inp.mv||V();const rk=f.vRamp?(.35+.65*Math.min(1,f.t/1.1)):1;const sp=6.8*rk;
+  const mv=inp.mv||V();const rk=f.vRamp?(.1+.9*Math.pow(Math.min(1,f.t/1.2),2)):1;const sp=6.8*rk;
   f.vel.x=lerp(f.vel.x,mv.x*sp,1-Math.exp(-dt*6));f.vel.z=lerp(f.vel.z,mv.z*sp,1-Math.exp(-dt*6));
   const d=hdist(f.pos,o.pos);
   {// radial gravity well: weak at the rim, strong near the core, with a tangential swirl
@@ -3216,7 +3216,7 @@ function animate(f,dt){
   charFx(f,r,dt,st);
   r.torn.visible=st==='vortex';r.body.visible=st!=='vortex';
   if(f.vapor){r.body.visible=false;if(!r.vap){r.vap=new T.Group();for(let i=0;i<7;i++){const m=new T.Mesh(sph(1,12,8),new T.MeshBasicMaterial({color:i%2?'#c3c8d4':'#7f8696',transparent:true,opacity:.5,depthWrite:false}));m.userData.a=i/7*Math.PI*2;m.userData.y=.25+i*.28;m.scale.setScalar(.42-i*.035);r.vap.add(m)}r.root.add(r.vap)}r.vap.visible=true;r.vap.children.forEach((m,i)=>{m.userData.a+=dt*(5+i*.8);const rr=.32+Math.sin(t*3+i)*.12;m.position.set(Math.cos(m.userData.a)*rr,m.userData.y+Math.sin(t*4+i)*.06,Math.sin(m.userData.a)*rr);m.material.opacity=f.invis&&!f.isP?.2:.5})}else if(r.vap)r.vap.visible=false;
-  if(st==='vortex'){r.body.rotation.y+=dt*26*(f.vRamp?(.35+.65*Math.min(1,f.t/1.1)):1);r.torn.children.forEach(c=>{if(c.userData.spd)c.rotation.y+=dt*c.userData.spd});r.torn.position.set(Math.sin(t*6.5)*.18,0,Math.cos(t*5.3)*.14);r.torn.rotation.z=Math.sin(t*4.7)*.09;r.torn.rotation.x=Math.cos(t*3.9)*.07;r.body.position.x=Math.sin(t*6.5)*.12;r.body.position.z=Math.cos(t*5.3)*.09;r.torn.children.forEach(c=>{if(c.userData.a!==undefined){c.userData.a+=dt*5;c.position.set(Math.cos(c.userData.a)*1.6,c.userData.y,Math.sin(c.userData.a)*1.6);c.rotation.x+=dt*4}})}
+  if(st==='vortex'){r.body.rotation.y+=dt*26*(f.vRamp?(.1+.9*Math.pow(Math.min(1,f.t/1.2),2)):1);r.torn.children.forEach(c=>{if(c.userData.spd)c.rotation.y+=dt*c.userData.spd});r.torn.position.set(Math.sin(t*6.5)*.18,0,Math.cos(t*5.3)*.14);r.torn.rotation.z=Math.sin(t*4.7)*.09;r.torn.rotation.x=Math.cos(t*3.9)*.07;r.body.position.x=Math.sin(t*6.5)*.12;r.body.position.z=Math.cos(t*5.3)*.09;r.torn.children.forEach(c=>{if(c.userData.a!==undefined){c.userData.a+=dt*5;c.position.set(Math.cos(c.userData.a)*1.6,c.userData.y,Math.sin(c.userData.a)*1.6);c.rotation.x+=dt*4}})}
   else if(f.spinDown>0){f.spinDown-=dt;r.body.rotation.y+=dt*26*Math.max(0,f.spinDown/.5);r.body.position.x*=Math.pow(.85,FR);r.body.position.z*=Math.pow(.85,FR)}
   else{r.body.rotation.y=lerp(r.body.rotation.y%(Math.PI*2),0,Math.min(1,dt*10));r.body.position.x=0;r.body.position.z=0}
   if(spin!==null)r.body.rotation.y=spin;
@@ -3581,7 +3581,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=85;
+const NET_VER=86;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
