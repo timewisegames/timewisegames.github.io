@@ -1398,7 +1398,7 @@ function envFlags(f,dt){
       case 'water':f.onWater=true;setStatus(f,'wet',3);f.status.burn=0;break;
       case 'vines':f.onVines=true;if(!mine&&f.st==='vortex'){vineCatch(f,h.owner);break}if(!mine&&f.rootImm<=0){setStatus(f,'root',1.1);f.rootImm=3;fxWrap(f,{n:2,h:.7,dur:1.1,thick:.65})}break;
       case 'gas':if(!mine)setStatus(f,'poison',1.4);break;
-      case 'shock':f.onWater=true;if(!mine){setStatus(f,'wet',3);if(clock-(f.shockHz||0)>.7){f.shockHz=clock;setStatus(f,'shock',.3);damage(h.owner,f,3,{dot:true});fxBolt(chest(f),V(f.pos.x,.05,f.pos.z),'#bfe4ff',.12)}}break;
+      case 'shock':f.onWater=true;if(!mine){setStatus(f,'wet',3);if(h.calm)break;if(clock-(f.shockHz||0)>.7){f.shockHz=clock;setStatus(f,'shock',.3);damage(h.owner,f,3,{dot:true});fxBolt(chest(f),V(f.pos.x,.05,f.pos.z),'#bfe4ff',.12)}}break;
       case 'gust':if(!mine&&clock-(f.gustHz||0)>.8){f.gustHz=clock;const gd=dirTo(h.pos,f.pos);f.vel.x+=gd.x*13;f.vel.z+=gd.z*13;f.vel.y=Math.max(f.vel.y,6);f.grounded=false;emit(chest(f),'#effff6',8,3,-.3);float(f,'GUST','#bff7dc')}break;
     }
   }
@@ -1494,7 +1494,7 @@ function telegraph(pos,col,r,dur){fxRing(V(pos.x,0,pos.z),col,r,r*.9,dur)}
 function teleportFx(f){emit(chest(f),'#a07bff',18,4);fxFlash(chest(f),'#6b4bd8',1.4,.3)}
 
 /* ================= VORTEX STANCE ================= */
-function startVortex(f){if(f.en<40)return false;if(f.foe&&f.foe.def.id==='echo'&&hdist(f.pos,f.foe.pos)<15&&!f.mirrorEl)addMirror(f.foe,40);teleWind(f,'skill',.4);special(f,{dur:.4,pose:'windup',tele:'skill',update(f){const k=Math.pow(.8,FR);f.vel.x*=k;f.vel.z*=k},end(f,s,c){f.flash=0;f.flashCol=null;if(c)return;f.st='vortex';f.t=0;f.vt=0;f.vp=0;f.vf=0;f.vs=0;snd('spin');float(f,'VORTEX',EL[f.def.el].c);fxRing(f.pos,EL[f.def.el].c,.4,2.2,.35)}});emit(V(f.pos.x,.1,f.pos.z),EL[f.def.el].c,10,2,-.3);return true}
+function startVortex(f){if(f.en<40)return false;if(f.foe&&f.foe.def.id==='echo'&&hdist(f.pos,f.foe.pos)<15&&!f.mirrorEl)addMirror(f.foe,40);teleWind(f,'skill',.4);special(f,{dur:.4,pose:'windup',tele:'skill',update(f){const k=Math.pow(.8,FR);f.vel.x*=k;f.vel.z*=k},end(f,s,c){f.flash=0;f.flashCol=null;if(c)return;f.st='vortex';f.t=0;f.vt=0;f.vp=0;f.vStrikes=0;f.vf=0;f.vs=0;snd('spin');float(f,'VORTEX',EL[f.def.el].c);fxRing(f.pos,EL[f.def.el].c,.4,2.2,.35)}});emit(V(f.pos.x,.1,f.pos.z),EL[f.def.el].c,10,2,-.3);return true}
 function vortexUpdate(f,dt,inp){
   const el=f.mirrorEl||f.def.el,o=f.foe;f.t+=dt;f.en-=30*dt;
   const mv=inp.mv||V();const sp=6.8;
@@ -1512,13 +1512,13 @@ function vortexUpdate(f,dt,inp){
   for(const t of foesOf(f))if(t.veil>0&&hdist(t.pos,f.pos)<3.4*f.size)veilBreak(t);
   f.vt-=dt;f.vp-=dt;
   const C={fire:{dmg:4,kb:2,up:1},storm:{dmg:3,kb:2,up:1},ice:{dmg:3,kb:1.5,up:.5},earth:{dmg:6,kb:12,up:4},wind:{dmg:3,kb:7,up:3}}[el];
-  if(f.vt<=0){let any=false;for(const t of foesOf(f))if(hdist(f.pos,t.pos)<1.6*f.size+t.rad&&Math.abs(t.pos.y-f.pos.y)<2.6){any=true;damage(f,t,C.dmg,{dir:dirTo(f.pos,t.pos),kb:C.kb,up:C.up,noStun:true});if(el==='fire')setStatus(t,'burn',1.5);if(el==='ice'&&!(t.status.frozen>0)){setStatus(t,'chill',1.2);t.chillAt=clock}}if(any)f.vt=el==='earth'?.55:.32}
+  if(f.vt<=0){let any=false;for(const t of foesOf(f))if(hdist(f.pos,t.pos)<1.6*f.size+t.rad&&Math.abs(t.pos.y-f.pos.y)<2.6){any=true;damage(f,t,C.dmg,{dir:dirTo(f.pos,t.pos),kb:C.kb,up:C.up,noStun:true});if(el==='fire')setStatus(t,'burn',1.5);if(el==='ice'&&!(t.status.frozen>0)){setStatus(t,'chill',1.2);t.chillAt=clock}if(el==='storm'&&(f.vStrikes||0)<2&&clock>(f.vStrikeAt||0)){f.vStrikes=(f.vStrikes||0)+1;f.vStrikeAt=clock+.7;strike(f,t.pos.clone(),.2,8);float(t,'THUNDER '+f.vStrikes+'/2','#bfe4ff')}}if(any)f.vt=el==='earth'?.55:.32}
   if(el==='earth')for(const s of solids)if(!s.dead&&hdist(s.pos,f.pos)<2.4+s.r)hitSolid(s,5);
   for(const h of hazards)if((h.type==='smoke'||h.type==='gas')&&hdist(h.pos,f.pos)<3)killHz(h);
   if(f.vp<=0){
     if(el==='fire'){f.vp=.22;addHazard('fire',f.pos,.9,4,f)}
     else if(el==='ice'){f.vp=.28;addHazard('ice',f.pos,1,6,f);for(const h of hazards)if((h.type==='water'||h.type==='fire')&&hdist(h.pos,f.pos)<3.2){const p=h.pos.clone(),r=h.r;killHz(h);if(h.type==='water')addHazard('ice',p,r,6,f)}}
-    else if(el==='storm'){f.vp=.35;addHazard('shock',f.pos,1.1,5,f);f.vs=(f.vs||0)-1;if(f.vs<=0){f.vs=2;if(stormLock(f,o,7))strike(f,o.pos.clone().add(V(rand(-.8,.8),0,rand(-.8,.8))),.55,6)}}
+    else if(el==='storm'){f.vp=.35;addHazard('shock',f.pos,1.1,5,f);const hz=hazards[hazards.length-1];if(hz&&hz.type==='shock'&&hz.owner===f)hz.calm=true}
     else if(el==='earth'){f.vp=.6;const a=rand(0,7);dustBurst(V(f.pos.x+Math.cos(a)*1.6,0,f.pos.z+Math.sin(a)*1.6),.35,'#a07850');spawnDebris(V(f.pos.x+Math.cos(a)*1.4,1.2,f.pos.z+Math.sin(a)*1.4),V(Math.cos(a)*9,6,Math.sin(a)*9));const db=debris[debris.length-1];if(db){db.state='fly';db.owner=f;db.m.material=M('#8a6a4a')}emit(V(f.pos.x,.3,f.pos.z),'#c8a878',6,3,.3)}
     else if(el==='wind'){f.vp=.4;addHazard('gust',f.pos,1.3,5,f)}
     else f.vp=1;
@@ -1530,7 +1530,7 @@ function endVortex(f,cancel){
   if(f.st!=='vortex')return;f.st='free';f.en=Math.max(0,f.en);f.rig.torn.visible=false;f.spinDown=.5;
   const mEl=f.mirrorEl;if(!(f.mirrorT>0))f.mirrorEl=null;if(cancel)return;const o=f.foe,el=mEl||f.def.el;
   if(el==='fire'){if(hdist(f.pos,o.pos)<3){damage(f,o,8,{el:'fire',kb:2,up:16,heavy:true});float(o,'LAUNCHED','#ffd27a')}fxColumn(f.pos,'#ff8a3d',6,1.2,.35)}
-  if(el==='storm'){if(stormLock(f,o,7))strike(f,o.pos,.3,9)}
+  
   if(el==='ice'){aoe(f,f.pos,3,6,{kb:4,up:2,noStun:true});for(const t of foesOf(f))if(hdist(t.pos,f.pos)<3.2&&!(t.status.frozen>0)){setStatus(t,'chill',2);t.chillAt=clock};fxRing(f.pos,'#cff8ff',.5,3.4,.4)}
   if(el==='wind'){for(const t of foesOf(f))if(hdist(t.pos,f.pos)<4.5)damage(f,t,8,{dir:dirTo(f.pos,t.pos),kb:18,up:6,heavy:true});fxRing(f.pos,'#9ff0c8',.5,5,.45);emit(V(f.pos.x,1,f.pos.z),'#effff6',30,7,-.2)}
   if(el==='earth'){aoe(f,f.pos,4.5,9,{kb:12,up:5,heavy:true,breaks:5});fxRing(f.pos,'#d08b3c',.5,4,.45);shakeIt(.35)}
@@ -2349,7 +2349,7 @@ KITS.tempest={
   e:{n:'Static Tether',d:'Throw a chain-sickle. If it hooks your foe it shocks them and yanks you straight to them.',cd:7,ai:[3.5,12],run(f){cast(f,.2);const d=aim(f);
     proj({owner:f,el:'storm',pos:chest(f).addScaledVector(d,.7),dir:d,speed:26,r:.32,dmg:6,kb:0,up:0,life:.6,kind:'shard',tick(p){fxBolt(chest(f),p.pos.clone(),'#9fd4ff',.05)},onHit(p,t){setStatus(t,'shock',.7);
       special(f,{dur:.45,kin:true,pose:'rush',iframes:true,update(f,dt,s){const d=dirTo(f.pos,t.pos),dist=hdist(f.pos,t.pos);if(dist>1.4){const step=Math.min(dist-1.3,30*dt);f.pos.addScaledVector(d,step);f.yaw=Math.atan2(d.x,d.z)}else s.t=s.dur;fxGhost(f,'#6fb6ff')},end(f){f.vel.set(0,0,0)}})}});snd('zap')}},
-  r:{n:'Thunderhead Vortex',d:'Hold R. Become a storm cyclone that leaves electrified puddles behind you and calls lightning down on a foe within 7 metres. Lightning cannot find foes who are invisible or hidden in smoke, and it arcs through puddles.',vortex:true},
+  r:{n:'Thunderhead Vortex',d:'Hold R. Become a storm cyclone that leaves soaking storm puddles behind you. When the cyclone hits your foe, lightning strikes them, but only twice per cyclone.',vortex:true},
   update(f,dt){if(Math.hypot(f.vel.x,f.vel.z)>1.5&&f.grounded)f.charge=Math.min(100,f.charge+dt*28)},
   onDealHit(f,t,o){if(f.charge>=100&&!o.blocked&&!o.dot){setStatus(t,'shock',1.1);f.charge=0;float(t,'STATIC!','#9fd4ff');fxBolt(chest(f),chest(t),'#cfe9ff')}}
 };
@@ -3570,7 +3570,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=82;
+const NET_VER=83;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
