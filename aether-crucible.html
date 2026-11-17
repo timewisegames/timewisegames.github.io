@@ -1853,8 +1853,7 @@ function visLights(){const on=VIS.on&&GFX.mode!=='fast';BRAZ.lights.forEach(L=>{
 /* character materials: woven cloth bump, brushed polished metal */
 function visRig(allM){allM.forEach(m=>{if(!m||!m.color)return;const hex=m.color.getHexString(),met=METALS.has(hex);
   if(m.userData.v0===undefined)m.userData.v0={bump:m.bumpMap||null,met:m.metalness,rough:m.roughness,rmap:m.roughnessMap||null};
-  if(VIS.on){if(m.isMeshStandardMaterial&&met){m.metalness=.85;m.roughness=.25;m.roughnessMap=BRUSHED;m.envMapIntensity=1.1}
-    else if(!m.userData.pearl&&(m.isMeshStandardMaterial||m.isMeshToonMaterial)&&!m.transparent){m.bumpMap=WEAVE;m.bumpScale=.35}}
+  if(VIS.on){if(m.isMeshStandardMaterial&&met){m.metalness=.85;m.roughness=.25;m.roughnessMap=BRUSHED;m.envMapIntensity=1.1}}
   else{const o=m.userData.v0;m.bumpMap=o.bump;if(m.isMeshStandardMaterial){m.metalness=o.met;m.roughness=o.rough;m.roughnessMap=o.rmap}}
   m.needsUpdate=true})}
 function visSetMode(on){VIS.on=on;store.set('ac-vis',on);visApplyMap();for(const f of fighters)if(f&&f.rig)visRig(f.rig.all);if(showcase&&showcase.rig)visRig(showcase.rig.all);visLabel()}
@@ -3415,7 +3414,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=76;
+const NET_VER=77;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
