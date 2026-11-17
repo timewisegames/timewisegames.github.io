@@ -5,3 +5,7 @@ aether-crucible-web.zip
 # older prototypes, kept locally only
 shadow-dojo.html
 shadow-dojo-3d.html
+
+# local test copies
+zz-*.html
+.claude/

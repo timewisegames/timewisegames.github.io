@@ -822,7 +822,7 @@ function fxFlash(pos,col,r,dur){const m=new T.Mesh(sph(1,14,10),new T.MeshBasicM
 function fxColumn(pos,col,h,r,dur){const m=new T.Mesh(cyl(1,1,1,14,1),addMat(col,.75));m.scale.set(r,h,r);m.position.set(pos.x,h/2,pos.z);fx(m,dur,(m,k)=>{m.material.opacity=.75*(1-k);m.scale.x=m.scale.z=r*(1+k*.5)})}
 function fxBolt(a,b,col,dur=.18){const pts=[];const n=8;for(let i=0;i<=n;i++){const p=a.clone().lerp(b,i/n);if(i>0&&i<n){p.x+=rand(-.35,.35);p.y+=rand(-.35,.35);p.z+=rand(-.35,.35)}pts.push(p)}const g=new T.BufferGeometry().setFromPoints(pts);const l=new T.Line(g,new T.LineBasicMaterial({color:col,transparent:true}));fx(l,dur,(m,k)=>{m.material.opacity=1-k});const l2=l.clone();l2.material=new T.LineBasicMaterial({color:'#ffffff',transparent:true});fx(l2,dur*.6,(m,k)=>{m.material.opacity=1-k})}
 function fxClone(f,col){const r=f.rig;if(!r||f.invis)return fxGhost(f,col);const mat=new T.MeshBasicMaterial({color:col,transparent:true,opacity:.42,depthWrite:false,blending:T.AdditiveBlending});const b=r.body.clone();b.traverse(o=>{if(o.isMesh){o.material=o===r.trail||o.material===r.trail.material?null:mat;o.castShadow=false;if(!o.material)o.visible=false}});const g=new T.Group();g.position.copy(r.root.position);g.rotation.copy(r.root.rotation);g.add(b);fx(g,.38,(m,k)=>{mat.opacity=.42*(1-k)})}
-function fxGhost(f,col){const g=new T.Mesh(cyl(.28*f.size,.2*f.size,1.7*f.size,8),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.35,depthWrite:false}));g.position.set(f.pos.x,f.pos.y+.9*f.size,f.pos.z);fx(g,.3,(m,k)=>{m.material.opacity=.35*(1-k)})}
+function fxGhost(f,col){if(veiledFor(f))return;const g=new T.Mesh(cyl(.28*f.size,.2*f.size,1.7*f.size,8),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.35,depthWrite:false}));g.position.set(f.pos.x,f.pos.y+.9*f.size,f.pos.z);fx(g,.3,(m,k)=>{m.material.opacity=.35*(1-k)})}
 function fxSpike(pos,col){if(col!=='#bff4ff')dustBurst(pos,.3,col==='#2a1018'?'#5a4048':col);const m=new T.Mesh(cone(.45,1.6,6),M(col));m.position.set(pos.x,-1,pos.z);m.rotation.set(rand(-.3,.3),rand(0,3),rand(-.3,.3));fx(m,.7,(m,k)=>{m.position.y=k<.2?lerp(-1,.5,k/.2):k>.75?lerp(.5,-1.2,(k-.75)/.25):.5})}
 
 /* ================= FLOATING TEXT ================= */
@@ -879,7 +879,8 @@ function sculptHead(){const g=new T.SphereGeometry(.2,30,22);const a=g.attribute
   g.computeVertexNormals();return g}
 function landC(f){if(!(f.landT>0))return 0;const e=.26-f.landT;return (e<.1?1:1-smoothstep(0,1,(e-.1)/.16))*(f.landK||.5)}
 function smoothstep(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
-function landFx(f){const K=f.landK||.5,p=V(f.pos.x,.05,f.pos.z);const n=Math.round(6+K*12);for(let i=0;i<n;i++){const a=i/n*Math.PI*2+Math.random()*.3;emit(V(p.x+Math.cos(a)*.35,.08,p.z+Math.sin(a)*.35),'#e8dccb',1,1.6+K*2.4,.15,.9+K*.5)}fxRing(p,'#f3eadb',.35,.9+K*1.3,.32,.03);if(f.cl)f.cl.vf+=1.8*K}
+function veiledFor(f){return !!(f&&f.veil>0&&f!==P&&!((f.dustT||0)>.4)&&!((f.shim||0)>0))}
+function landFx(f){if(veiledFor(f))return;const K=f.landK||.5,p=V(f.pos.x,.05,f.pos.z);const n=Math.round(6+K*12);for(let i=0;i<n;i++){const a=i/n*Math.PI*2+Math.random()*.3;emit(V(p.x+Math.cos(a)*.35,.08,p.z+Math.sin(a)*.35),'#e8dccb',1,1.6+K*2.4,.15,.9+K*.5)}fxRing(p,'#f3eadb',.35,.9+K*1.3,.32,.03);if(f.cl)f.cl.vf+=1.8*K}
 function makeCloth(m,amt){const g=m.geometry.clone();m.geometry=g;const b=Float32Array.from(g.attributes.position.array);g.computeBoundingBox();const top=g.boundingBox.max.y,h=top-g.boundingBox.min.y;return{m,g,b,top,h,amt}}
 function animCloth(f,r,dt,loc){const c=f.cl||(f.cl={lx:0,lz:0,vx:0,vz:0,fl:0,vf:0});
   const air=!f.grounded&&!(f.status.zerog>0);const vy=f.vel.y;
@@ -2332,7 +2333,7 @@ KITS.aurel={
   e:{n:'Glimmer Veil',d:'Bend light around yourself and turn 90% invisible until you attack, leaving a shimmering light decoy of yourself behind that shatters like glass when attacked. Your foe loses track of you. Attacking or using any other ability ends it; a punch from the veil deals 50% more. Stand still for 5 seconds and the light around you starts to shimmer, outlining you until you move again.',cd:6,ai:[3,14],run(f){spawnDecoy(f);f.veil=1;f.veilSw=false;float(f,'VANISHED','#fff2a8');emit(chest(f),'#fff2a8',20,3);snd('parry')}},
   r:{n:'Solar Flare',cost:100,d:'Signature. Detonate a flashbang of pure light. Every foe within 8 metres has their vision whited out, is stunned for 1 second and burned, and you heal.',run(f){fxFlash(chest(f),'#fffbe0',11,.55);fxRing(f.pos,'#fff2a8',.5,10,.5);fxColumn(f.pos,'#fffbe0',9,1.4,.4);for(const t of foesOf(f))if(hdist(t.pos,f.pos)<8){damage(f,t,10,{kb:6,up:3});setStatus(t,'blind',2);setStatus(t,'flashed',1);if(t===P||t.human)t.whiteT=1.8}f.hp=Math.min(f.maxhp,f.hp+12);tick('SOLAR FLARE','#fff2a8',f);snd('boom')}},
   update(f,dt){if(f.veil>0){if(f.st==='atk'||f.st==='heavy')f.veilSw=true;else if(f.veilSw){f.veil=0;f.veilSw=false}}
-    if(f.veil>0){const hs=Math.hypot(f.vel.x,f.vel.z);f.stillT=hs<.8?(f.stillT||0)+dt:Math.max(0,(f.stillT||0)-dt*4);const was=f.shim||0;f.shim=clamp((f.stillT-5)/1.2,0,1);if(was===0&&f.shim>0)float(f,'SHIMMERING','#fff2c0')}else{f.stillT=0;f.shim=0}if(f.veil>0){f.invis=true;if(Math.random()<.2*FR)emit(V(f.pos.x,.1,f.pos.z),'#fff2a8',1,.3,0,.5)}},
+    if(f.veil>0){const hs=Math.hypot(f.vel.x,f.vel.z);f.stillT=hs<.8?(f.stillT||0)+dt:Math.max(0,(f.stillT||0)-dt*4);const was=f.shim||0;f.shim=clamp((f.stillT-5)/1.2,0,1);if(was===0&&f.shim>0)float(f,'SHIMMERING','#fff2c0')}else{f.stillT=0;f.shim=0}if(f.veil>0){f.invis=true;if(f===P&&Math.random()<.2*FR)emit(V(f.pos.x,.1,f.pos.z),'#fff2a8',1,.3,0,.5)}},
   onDealHit(f,t,o){if(o.blocked||o.dot)return;f.glow=(f.glow||0)+1;if(f.glow>=5){f.glow=0;setStatus(t,'blind',.4);fxFlash(chest(t),'#fff7c8',1.2,.25)}}
 };
 
@@ -2490,7 +2491,7 @@ const MELEE={prism:[6,7,10],doppel:[5,6,9],vane:[9,9,14],cinder:[7,7,11],tempest
 
 /* ================= FIGHTER UPDATE ================= */
 function updFighter(f,dt,inp){
-  if(f.jumpSq>0){f.jumpSq-=dt;if(f.jumpSq<=0){f.jumpSq=0;if(f.grounded&&(f.st==='free'||f.st==='block')&&!(f.status.root>0)){if(f.st==='block')f.st='free';f.vel.y=f.jumpV;f.jumps=1;f.grounded=false;f.takeoffT=.14;emit(V(f.pos.x,.1,f.pos.z),'#e8dccb',8,2.4,.3);fxRing(f.pos,'#ffffff',.3,1,.22,.05)}}}
+  if(f.jumpSq>0){f.jumpSq-=dt;if(f.jumpSq<=0){f.jumpSq=0;if(f.grounded&&(f.st==='free'||f.st==='block')&&!(f.status.root>0)){if(f.st==='block')f.st='free';f.vel.y=f.jumpV;f.jumps=1;f.grounded=false;f.takeoffT=.14;if(!veiledFor(f))emit(V(f.pos.x,.1,f.pos.z),'#e8dccb',8,2.4,.3);fxRing(f.pos,'#ffffff',.3,1,.22,.05)}}}
   const o=f.foe;
   if(inp.atk&&f.st!=='free'&&f.st!=='block')f.atkBuf=.4;f.atkBuf=(f.atkBuf||0)-dt;
   for(const k in f.cd)f.cd[k]=Math.max(0,f.cd[k]-dt);
@@ -2554,7 +2555,7 @@ function freeControl(f,dt,inp){
   const k=1-Math.exp(-dt*(slip?2.2:f.grounded?(ml>.1?6.5:8.5):4.5));
   f.vel.x=lerp(f.vel.x,tx,k);f.vel.z=lerp(f.vel.z,tz,k);
   const maxJ=f.def.hover?3:2;
-  if(inp.jump&&!rooted){const jv=(f.metal?7.6:11.8)*(f.def.hover?.9:1);if(f.grounded){if(!(f.jumpSq>0)){f.jumpSq=.07;f.jumpV=jv}}else if(f.jumps<maxJ){f.vel.y=jv*.9;f.jumps++;f.flipT=.42;fxRing(f.pos,EL[f.def.el].c,.3,1,.25,.2)}}
+  if(inp.jump&&!rooted){const jv=(f.metal?7.6:11.8)*(f.def.hover?.9:1);if(f.grounded){if(!(f.jumpSq>0)){f.jumpSq=.07;f.jumpV=jv}}else if(f.jumps<maxJ){f.vel.y=jv*.9;f.jumps++;f.flipT=.42;(veiledFor(f)||fxRing(f.pos,EL[f.def.el].c,.3,1,.25,.2))}}
   if(inp.dash&&f.cd.dash<=0&&!rooted&&(f.grounded||f.airDash)){
     const d=ml>.1?mv.clone().normalize():fwd(f);const ds=f.def.id==='dash'?19.5:16.5;
     f.vel.x=d.x*ds;f.vel.z=d.z*ds;if(!f.grounded){f.vel.y=Math.max(f.vel.y,1.5);f.airDash=false}
@@ -2878,12 +2879,14 @@ function animate(f,dt){
   r.dome.visible=f.dome>0;if(f.dome>0){r.dome.material.opacity=.14+Math.sin(t*12)*.05;r.dome.rotation.y+=dt}
   r.aura.material.opacity=f.isP?.55:.35;r.aura.visible=f.hp>0&&f.grounded;
   // invisibility
-  const shm=f.veil>0?(f.shim||0):0;const op=f.invis?((f.dustT||0)>.4?.02:f.veil>0?lerp(f.isP?.22:.1,.62,shm)*(shm>0?.86+.14*Math.sin(clock*17):1):(f.isP?.35:.12)):1;
+  const shm=f.veil>0?(f.shim||0):0;const op=f.invis?((f.dustT||0)>.4?(f===P?.02:0):f.veil>0?(f===P?lerp(.22,.62,shm):lerp(0,.62,shm))*(shm>0?.86+.14*Math.sin(clock*17):1):(f.isP?.35:.12)):1;
   if(f.def.id==='aurel'&&r.rimU){const U=r.rimU;if(!r._rimC)r._rimC=U.uRimC.value.clone();U.uRimK.value=(RIM_ON?.75:0)+shm*2.4*(.8+.2*Math.sin(clock*23));if(shm>0)U.uRimC.value.set('#fff0b0');else U.uRimC.value.copy(r._rimC)}
   if(r._op!==op){const from=r._op===undefined?op:r._op;r._op=op;r.aura.visible=op===1;
     if(f.def.id==='aurel'&&r.rimU&&(from===1)!==(op===1)){const U=r.rimU;r._sw={t:0,dur:.28};U.uSw.value.set(0,Math.random()<.5?1:-1,from,op);U.uSwOn.value=1;r.all.forEach(m=>{m.transparent=true;m.opacity=1});snd&&snd('dash')}
     else{if(r._sw){r._sw=null;r.rimU.uSwOn.value=0}r.all.forEach(m=>{m.transparent=op<1;m.opacity=op})}}
   if(r._sw){const w=r._sw,U=r.rimU;w.t+=dt;const p=Math.min(1,w.t/w.dur);U.uSw.value.x=p*p*(3-2*p);if(p>=1){r._sw=null;U.uSwOn.value=0;r.all.forEach(m=>{m.transparent=op<1;m.opacity=op})}}
+  if(op<=0&&!r._sw)r.body.visible=false;
+  if(op<1&&f!==P)r.aura.visible=false;
 }
 
 /* ================= CAMERA ================= */
@@ -3211,7 +3214,7 @@ function hud(){
     if(f.chipHp>f.hp){f.chipHp=Math.max(f.hp,f.chipHp-f.maxhp*.6*RDT)}else f.chipHp=f.hp;sty($(k+'-chip'),'width',(f.chipHp/f.maxhp*100).toFixed(1)+'%');
     const en=$(k+'-en');sty(en,'width',f.en.toFixed(1)+'%');const ef=f.en>=100;if(en._f!==ef){en._f=ef;en.classList.toggle('full',ef)}
     let h='';for(const s in f.status)if(f.status[s]>0&&STATUS_NAMES[s])h+=`<span style="color:${STATUS_NAMES[s][1]}">${STATUS_NAMES[s][0]}</span>`;
-    if(f.metal)h+='<span style="color:#e6edf5">IRON</span>';if(f.invis)h+='<span style="color:#c9b3ff">HIDDEN</span>';if(f.ts<1)h+='<span style="color:#ffe36a">SLOWED TIME</span>';
+    if(f.metal)h+='<span style="color:#e6edf5">IRON</span>';if(f.invis&&!veiledFor(f))h+='<span style="color:#c9b3ff">HIDDEN</span>';if(f.ts<1)h+='<span style="color:#ffe36a">SLOWED TIME</span>';
     const el=$(k+'-sts');if(el._h!==h){el._h=h;el.innerHTML=h}
   });
   if(match&&match.mode==='training'){txt($('tm'),'∞');txt($('rd'),'TRAINING')}
@@ -3227,7 +3230,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=73;
+const NET_VER=74;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
