@@ -543,6 +543,8 @@ const ICONS={
   crush:`<path d="M12 2v12M7 9l5 5 5-5" ${SW_} stroke-width="2.6"/><path d="M3 18h18M6 22h12" ${SW_} stroke-width="2"/>`,
   spiral:`<path d="M12 12a2 2 0 1 1 2 2 4 4 0 0 1-6-2 6 6 0 0 1 8-6 8 8 0 0 1 4 10" ${SW_} stroke-width="2.2"/>`,
   vines:`<path d="M4 21c0-6 4-8 4-14M12 21c0-5-3-7-3-11M20 21c0-6-4-8-4-14" ${SW_} stroke-width="2.2"/><path d="M8 7c2 0 3-2 3-3M16 7c-2 0-3-2-3-3" ${SW_} stroke-width="2"/>`,
+  tree:`<path d="M12 22v-9M12 15l-4-3M12 13l4-3" ${SW_} stroke-width="2.4"/><circle cx="12" cy="8" r="6" fill="currentColor"/><path d="M5 22h14" ${SW_} stroke-width="2"/>`,
+  roots:`<path d="M12 3c-4 3 4 5 0 8s4 5 0 8" ${SW_} stroke-width="2.4"/><path d="M4 21c3-1 5-3 8-2s5 1 8 2M6 13c2 1 4 0 6-2M18 9c-2 0-4 1-6 2" ${SW_} stroke-width="2"/>`,
   pod:`<ellipse cx="12" cy="14" rx="6" ry="7" fill="currentColor"/><path d="M12 7V3M9 4l3 3 3-3" ${SW_} stroke-width="2"/>`,
   rush:`<path d="M2 8h8M2 12h11M2 16h8" ${SW_} stroke-width="2.2"/><path d="m14 6 6 6-6 6" ${SW_} stroke-width="2.6"/>`,
   ring:`<circle cx="12" cy="12" r="8.5" ${SW_} stroke-width="2.2" stroke-dasharray="6 3"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/>`,
@@ -559,7 +561,7 @@ const ICONS={
   beam:`<path d="M3 18 12 9l3 3 6-7" ${SW_} stroke-width="2.6"/><circle cx="3" cy="18" r="2.2" fill="currentColor"/>`,
   veil:`<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z" ${SW_} stroke-width="2"/><path d="M4 20 20 4" ${SW_} stroke-width="2.4"/>`
 };
-const ABIL_IC={prism:{q:'shards',e:'step',z:'dome',r:'beam'},doppel:{q:'double',e:'spiral',z:'veil',r:'fusion'},vane:{q:'arc',e:'spike',z:'iron',r:'crush'},locust:{q:'geyser',e:'rush',z:'dome',x:'dive',r:'tornado'},cinder:{q:'arc',e:'dive',r:'tornado'},tempest:{q:'arrow',e:'hook',r:'tornado'},basalt:{q:'wall',e:'fissure',r:'tornado'},rime:{q:'shards',e:'skate',r:'tornado'},tide:{q:'water',e:'geyser',r:'wave'},gloam:{q:'step',e:'uprising',r:'eclipse'},orbit:{q:'bubble',e:'crush',r:'spiral'},bramble:{q:'vines',e:'pod',r:'nature'},dash:{q:'rush',e:'ring',r:'clock'},anvil:{q:'iron',e:'magnet',r:'metal'},echo:{q:'mirror',e:'dome',r:'fusion'},cipher:{q:'spike',e:'double',r:'lock'},murk:{q:'smoke',e:'mist',r:'fog'},aurel:{q:'beam',e:'veil',r:'light'}};
+const ABIL_IC={prism:{q:'shards',e:'step',z:'dome',r:'beam'},doppel:{q:'double',e:'spiral',z:'veil',r:'fusion'},vane:{q:'arc',e:'spike',z:'iron',r:'crush'},locust:{q:'geyser',e:'rush',z:'dome',x:'dive',r:'tornado'},cinder:{q:'arc',e:'dive',r:'tornado'},tempest:{q:'arrow',e:'hook',r:'tornado'},basalt:{q:'wall',e:'fissure',r:'tornado'},rime:{q:'shards',e:'skate',r:'tornado'},tide:{q:'water',e:'geyser',r:'wave'},gloam:{q:'step',e:'uprising',r:'eclipse'},orbit:{q:'bubble',e:'crush',r:'spiral'},bramble:{q:'vines',e:'pod',x:'tree',r:'roots'},dash:{q:'rush',e:'ring',r:'clock'},anvil:{q:'iron',e:'magnet',r:'metal'},echo:{q:'mirror',e:'dome',r:'fusion'},cipher:{q:'spike',e:'double',r:'lock'},murk:{q:'smoke',e:'mist',r:'fog'},aurel:{q:'beam',e:'veil',r:'light'}};
 function abilIcon(id,k){const key=(ABIL_IC[id]||{})[k];const body=ICONS[key]||GLYPH[key]||GLYPH[(BYID[id]||{}).el]||GLYPH.mirror;return `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`}
 const SPEAKER_ON='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor"/><path d="M16 8a5 5 0 0 1 0 8M18.5 5.5a8.5 8.5 0 0 1 0 13" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
 const SPEAKER_OFF='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor"/><path d="m16 9 6 6m0-6-6 6" stroke="currentColor" stroke-width="2"/></svg>';
@@ -574,7 +576,7 @@ const ROSTER=[
   {id:'tide',name:'Tidecaller',title:'The Wave Monk',el:'water',hp:110,spd:6,pow:1.05,range:2.4,stats:[74,66,70,78],body:'#1f6f8a',accent:'#8ff0ff',head:'straw',weapon:'trident',bio:'Floods the arena with pools that put out fire and carry lightning.'},
   {id:'gloam',name:'Gloam',title:'The Lantern Shade',el:'shadow',hp:100,spd:6.6,pow:1.05,range:2,stats:[80,82,40,60],body:'#2b2140',accent:'#b89bff',head:'cowl',weapon:'lantern',bio:'Fades away inside pillar shadows, steps out behind you, and sends shadow doubles up through the floor.'},
   {id:'orbit',name:'Orbit',title:'The Weightless Sage',el:'gravity',hp:108,spd:5.8,pow:1,range:2.5,stats:[70,62,64,88],body:'#5a2f7a',accent:'#f2b6ff',head:'halo',weapon:'orb',hover:true,bio:'Never quite touches the ground. Floats foes up, then slams them down.'},
-  {id:'bramble',name:'Bramble',title:'The Thornwarden',el:'nature',hp:110,spd:5.8,pow:1.08,range:2.6,stats:[66,60,74,82],body:'#3c5b2a',accent:'#c6f07a',head:'antlers',weapon:'wstaff',bio:'Grows vines that root foes in place and plants pods that burst into spores.'},
+  {id:'bramble',name:'Bramble',title:'The Thornwarden',el:'nature',hp:110,spd:5.8,pow:1.08,range:2.6,stats:[66,60,74,82],body:'#3c5b2a',accent:'#c6f07a',head:'antlers',weapon:'wstaff',bio:'Grows vines that root foes and stop spinning tornadoes dead, rides an erupting tree into a crashing strike, and binds foes in ancient roots.'},
   {id:'dash',name:'Dash',title:'The Mountain Courier',el:'speed',hp:98,spd:8,pow:.9,range:2.2,stats:[64,100,40,60],body:'#b5641c',accent:'#ffe36a',head:'goggles',weapon:'tonfa',bio:'Too fast to hit. Circles foes into a whirlwind and slows time around them.'},
   {id:'anvil',name:'Anvil',title:'The Iron Smith',el:'metal',hp:120,spd:5.4,pow:1.15,range:2.2,size:1.12,stats:[90,50,100,55],body:'#5a3a2a',accent:'#ffb070',head:'visor',weapon:'gloves',bio:'A forge smith who boxes with two huge riveted gloves and turns his body to iron whenever he chooses. Heavy, slow and very hard to move.'},
   {id:'echo',name:'Echo-Glass',title:'The Mirror Dancer',el:'mirror',hp:116,spd:6.4,pow:1,range:2,stats:[72,74,66,80],body:'#b04a18',accent:'#ffc27a',head:'tiara',weapon:'glass',bio:'A theatrical mirror dancer who catches enemy elements in her glass shield and throws them back, two at a time.'},
@@ -600,7 +602,7 @@ const GRUNTS={
 const BYID=Object.fromEntries(ROSTER.map(d=>[d.id,d]));
 const HOST={id:'host',name:'The Host',title:'Keeper of the Crucible',role:'Tournament Host',el:'crown',hp:230,spd:6,pow:1.15,range:2.4,size:1.25,stats:[90,70,85,80],body:'#22182e',accent:'#f5c76b',head:'sunhalo',weapon:'sundisk',bio:'The masked keeper of the Crucible, who steals the powers of every master that falls in his arena.'};BYID.host=HOST;
 const STATNAMES=['Power','Speed','Defense','Reach'];
-const STATUS_NAMES={burn:['BURNED','#ff8a3d'],chill:['CHILLED','#9fefff'],frozen:['FROZEN','#cff8ff'],shock:['SHOCKED','#8fc8ff'],root:['ROOTED','#7be06a'],zerog:['ZERO-G','#f09bff'],blind:['BLINDED','#ffffff'],wet:['WET','#5aaaff'],poison:['POISONED','#9be55a'],confused:['CONFUSED','#7ff5e2'],dazed:['MIND-LOCKED','#4fe3d0'],flashed:['FLASHED','#fffbe0']};
+const STATUS_NAMES={burn:['BURNED','#ff8a3d'],chill:['CHILLED','#9fefff'],frozen:['FROZEN','#cff8ff'],shock:['SHOCKED','#8fc8ff'],root:['ROOTED','#7be06a'],zerog:['ZERO-G','#f09bff'],blind:['BLINDED','#ffffff'],wet:['WET','#5aaaff'],poison:['POISONED','#9be55a'],confused:['CONFUSED','#7ff5e2'],dazed:['MIND-LOCKED','#4fe3d0'],bound:['ENTANGLED','#9be55a'],flashed:['FLASHED','#fffbe0']};
 
 /* ================= STORAGE & SOUND ================= */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -1163,7 +1165,7 @@ function removeFighter(f){if(!f)return;world.remove(f.rig.root);f.shields.forEac
 function spdOf(f){let s=f.def.spd*.975*(f.dlv>1?1+.03*(f.dlv-1):1);if(!f.isP)s*=.8;if(f.tailT>0)s*=1.25;if(f.status.chill>0)s*=.6;if(f.metal)s*=.55;if(f.onIce&&f.def.id==='rime')s*=1.5;if(f.onWater&&f.def.id==='tide')s*=1.3;if(f.def.id==='gloam'&&eclipse>0&&eclipseOwner===f)s*=1.35;return s}
 function dmgMul(f){return (f.dlv>1?1+.05*(f.dlv-1):1)*(f.metal?1.4:1)*(f.def.pow||1)*(f.mindBoost>0?1.3:1)}
 function kbRes(f){const b=f.def.id==='basalt'?.4:0;return f.metal?.8:Math.max(b,Math.min(.7,f.armor*.12+b*.5))}
-function stunned(f){return f.status.frozen>0||f.status.shock>0||f.status.zerog>0||f.status.dazed>0||f.status.flashed>0}
+function stunned(f){return f.status.bound>0||f.status.frozen>0||f.status.shock>0||f.status.zerog>0||f.status.dazed>0||f.status.flashed>0}
 function setStatus(t,k,d){if(t.hp<=0)return;if(!(t.status[k]>0)){const n=STATUS_NAMES[k];if(n&&!(mode==='fight'&&P&&(t===P||t===P.foe)))float(t,n[0],n[1])}t.status[k]=Math.max(t.status[k]||0,d)}
 function freeze(t,d){if((t.freezeImm||0)>clock){setStatus(t,'chill',1.2);return}t.freezeImm=clock+d+4;if(t.metal&&Math.random()<.5)d*=.5;setStatus(t,'frozen',d);t.status.chill=0;t.vel.x*=.2;t.vel.z*=.2;if(t.st==='vortex'||t.st==='special')endSpecials(t);snd('ice')}
 function endSpecials(f){if(f.st==='vortex')endVortex(f,true);if(f.st==='special'){const s=f.special;f.st='free';if(s&&s.end&&!s.noEndOnCancel)s.end(f,s,true)}}
@@ -1175,7 +1177,7 @@ function applyEl(t,el,src){
     case 'water':setStatus(t,'wet',6);t.status.burn=0;break;
     case 'shadow':setStatus(t,'blind',1.4);break;
     case 'gravity':if(t.metal){float(t,'TOO HEAVY','#c5d0dc');break}setStatus(t,'zerog',1.8);t.vel.y=Math.max(t.vel.y,4);endSpecials(t);break;
-    case 'nature':if(t.rootImm<=0){setStatus(t,'root',1.3);t.rootImm=2.5}break;
+    case 'nature':if(t.st==='vortex'){vineCatch(t,src);break}if(t.rootImm<=0){setStatus(t,'root',1.3);t.rootImm=2.5;fxWrap(t,{n:2,h:.75,dur:1.3,thick:.7})}break;
     case 'mind':setStatus(t,'confused',3);break;
     case 'smoke':setStatus(t,'blind',.8);break;
     case 'light':setStatus(t,'blind',.35);break;
@@ -1388,7 +1390,7 @@ function envFlags(f,dt){
       case 'fire':if(!mine)setStatus(f,'burn',1.6);break;
       case 'ice':f.onIce=true;if(!mine&&f.def.id!=='rime'&&!f.status.chill)setStatus(f,'chill',1.2),f.chillAt=clock;break;
       case 'water':f.onWater=true;setStatus(f,'wet',3);f.status.burn=0;break;
-      case 'vines':f.onVines=true;if(!mine&&f.rootImm<=0){setStatus(f,'root',1.1);f.rootImm=3}break;
+      case 'vines':f.onVines=true;if(!mine&&f.st==='vortex'){vineCatch(f,h.owner);break}if(!mine&&f.rootImm<=0){setStatus(f,'root',1.1);f.rootImm=3;fxWrap(f,{n:2,h:.7,dur:1.1,thick:.65})}break;
       case 'gas':if(!mine)setStatus(f,'poison',1.4);break;
       case 'shock':f.onWater=true;if(!mine){setStatus(f,'wet',3);if(clock-(f.shockHz||0)>.7){f.shockHz=clock;setStatus(f,'shock',.3);damage(h.owner,f,3,{dot:true});fxBolt(chest(f),V(f.pos.x,.05,f.pos.z),'#bfe4ff',.12)}}break;
       case 'gust':if(!mine&&clock-(f.gustHz||0)>.8){f.gustHz=clock;const gd=dirTo(h.pos,f.pos);f.vel.x+=gd.x*13;f.vel.z+=gd.z*13;f.vel.y=Math.max(f.vel.y,6);f.grounded=false;emit(chest(f),'#effff6',8,3,-.3);float(f,'GUST','#bff7dc')}break;
@@ -2407,6 +2409,72 @@ KITS.orbit={
   update(f,dt){f.shields.forEach((s,i)=>{s.a+=dt*2.4;const r=1.2*f.size;s.m.position.set(f.pos.x+Math.cos(s.a)*r,f.pos.y+1.2*f.size+Math.sin(s.a*2)*.2,f.pos.z+Math.sin(s.a)*r);s.m.rotation.y+=dt*3;
     const o=f.foe;s.cd=(s.cd||0)-dt;if(o.hp>0&&s.cd<=0&&s.m.position.distanceTo(chest(o))<.9){s.cd=.6;damage(f,o,4,{dir:dirTo(f.pos,o.pos),kb:4,up:1})}})}
 };
+
+/* ================= ROOTS & TREES (Bramble) ================= */
+function taperTube(curve,seg,rad,r0,r1,pw){const g=new T.TubeGeometry(curve,seg,1,rad,false);const p=g.attributes.position,pt=new T.Vector3();
+  for(let j=0;j<=seg;j++){const u=j/seg;curve.getPointAt(u,pt);const sc=lerp(r0,r1,Math.pow(u,pw||1));for(let i=0;i<=rad;i++){const ix=j*(rad+1)+i;p.setXYZ(ix,pt.x+(p.getX(ix)-pt.x)*sc,pt.y+(p.getY(ix)-pt.y)*sc,pt.z+(p.getZ(ix)-pt.z)*sc)}}
+  p.needsUpdate=true;g.computeVertexNormals();g.userData.own=true;return g}
+function disposeOwn(g){g.traverse(o=>{if(o.geometry&&o.geometry.userData.own)o.geometry.dispose()})}
+const BARK='#5a3a22',BARK2='#7a5232',MOSS='#4f8a2e',LEAF='#5fae3a',LEAF2='#8fdc4a';
+// thick roots that burst from the floor and coil up a fighter's whole body
+function fxWrap(t,o){o=Object.assign({n:4,h:2,dur:2,thick:1,grow:.45,lift:0,thorns:true,claws:0},o);if(!t||t.hp<=0)return null;
+  const sz=t.size||1,g=new T.Group(),strands=[],seg=56,rad=7;g.position.set(t.pos.x,0,t.pos.z);
+  const bodyR=.4*sz,top=o.lift+o.h*sz;
+  for(let s=0;s<o.n;s++){const a0=s/o.n*TAU+rand(-.3,.3),dir=s%2?1:-1,turns=rand(1.15,1.6),pts=[];
+    for(let m=0;m<=14;m++){const u=m/14,e=Math.min(1,u/.32),r=lerp(1.35+rand(0,.25),bodyR+(u>.85?-.08:0)+Math.sin(u*9+s)*.035,1-Math.pow(1-e,2)),a=a0+dir*u*turns*TAU;
+      pts.push(V(Math.cos(a)*r,lerp(-.35,top-(s%2)*.25*sz,u)+(u<.3?Math.sin(u/.3*Math.PI)*.25:0),Math.sin(a)*r))}
+    const curve=new T.CatmullRomCurve3(pts),geo=taperTube(curve,seg,rad,.17*o.thick*sz,.025,1.2);
+    const m=new T.Mesh(geo,M(s%3===2?BARK2:BARK));m.castShadow=true;geo.setDrawRange(0,0);g.add(m);
+    const deco=[];if(o.thorns)for(let q=1;q<7;q++){const u=q/7+rand(-.03,.03),pt=curve.getPointAt(u),tn=curve.getTangentAt(u);
+      const out=V(pt.x,0,pt.z).normalize(),th=new T.Mesh(cone(.035*o.thick+.015,.16*o.thick+.05,4),M(q%3?'#cdbb8c':MOSS));th.position.copy(pt).addScaledVector(out,.1*o.thick);
+      th.quaternion.setFromUnitVectors(V(0,1,0),out.add(tn.multiplyScalar(.3)).normalize());th.scale.setScalar(.001);g.add(th);deco.push({m:th,u})}
+    if(o.thick>=.9)for(let q=0;q<3;q++){const u=.45+q*.2,pt=curve.getPointAt(u),lf=new T.Mesh(sph(.09,6,4),M(q%2?LEAF:LEAF2));lf.scale.set(.001,.001,.001);lf.position.copy(pt).add(V(pt.x,0,pt.z).normalize().multiplyScalar(.12));lf.userData.ls=V(1.1,.35,.7);g.add(lf);deco.push({m:lf,u,leaf:1})}
+    strands.push({m,deco,delay:s*.05+rand(0,.04),tot:seg*rad*6})}
+  for(let c=0;c<o.claws;c++){const a=c/o.claws*TAU+rand(-.25,.25),R0=rand(2.3,2.8),tw=rand(.35,.6)*(c%2?1:-1),hh=top+rand(.5,1);
+    const pts=[V(Math.cos(a)*R0,-.6,Math.sin(a)*R0),V(Math.cos(a)*R0*.95,hh*.45,Math.sin(a)*R0*.95),V(Math.cos(a+tw*.5)*R0*.7,hh*.9,Math.sin(a+tw*.5)*R0*.7),V(Math.cos(a+tw)*.75,hh+.2,Math.sin(a+tw)*.75),V(Math.cos(a+tw*1.3)*.25,top-.1,Math.sin(a+tw*1.3)*.25)];
+    const curve=new T.CatmullRomCurve3(pts),geo=taperTube(curve,40,8,.42*sz,.035,.8),m=new T.Mesh(geo,M(c%2?BARK2:BARK));m.castShadow=true;geo.setDrawRange(0,0);g.add(m);
+    const deco=[];for(let q=1;q<6;q++){const u=q/6,pt=curve.getPointAt(u),out=V(pt.x,0,pt.z).normalize(),th=new T.Mesh(cone(.07,.3,5),M(q%2?'#cdbb8c':MOSS));th.position.copy(pt).addScaledVector(out,.25*(1-u)+.08);th.quaternion.setFromUnitVectors(V(0,1,0),out);th.scale.setScalar(.001);g.add(th);deco.push({m:th,u})}
+    for(let q=0;q<3;q++){const u=.3+q*.22,pt=curve.getPointAt(u),lf=new T.Mesh(sph(.16,8,6),M(q%2?LEAF:MOSS));lf.position.copy(pt).add(V(pt.x,0,pt.z).normalize().multiplyScalar(.28));lf.userData.ls=V(1.3,.45,.9);lf.scale.setScalar(.001);g.add(lf);deco.push({m:lf,u,leaf:1})}
+    strands.push({m,deco,delay:.02+c*.04,seg:40,rad:8})}
+  world.add(g);const W={g,t,o,strands,age:0,release:o.dur,done:false};
+  dustBurst(V(t.pos.x,0,t.pos.z),o.claws?.12:.2*o.thick,'#6b4a2e');emit(V(t.pos.x,.2,t.pos.z),'#7a5232',8+o.n*2,3.5,1);
+  fx(g,o.dur+.45,(gg,k,dt)=>{W.age+=dt||0;if(t.hp>0&&!t.removed)gg.position.set(t.pos.x,0,t.pos.z);
+    const rel=W.age>W.release?Math.min(1,(W.age-W.release)/.4):0;
+    for(const st of strands){let gk=clamp((W.age-st.delay)/o.grow,0,1);gk=1-Math.pow(1-gk,3);const vis=gk*(1-rel);
+      st.m.geometry.setDrawRange(0,Math.floor(vis*(st.seg||seg))*(st.rad||rad)*6);
+      for(const d of st.deco){const on=vis>d.u?Math.min(1,(vis-d.u)*8):0;if(d.leaf)d.m.scale.copy(d.m.userData.ls).multiplyScalar(on||.001);else d.m.scale.setScalar(on||.001)}}
+    if(rel>=1&&!W.done){W.done=true;gg.visible=false}});
+  later(o.dur+.6,()=>disposeOwn(g));return W}
+function wrapRelease(W,burst){if(!W||W.done)return;W.release=Math.min(W.release,W.age);if(burst){const p=W.g.position;for(let i=0;i<4;i++)emit(V(p.x,.4+i*.5,p.z),i%2?BARK2:LEAF2,10,6,1.2,1.3);emit(V(p.x,1.2,p.z),LEAF,16,5,.4)}}
+// a spinning vortex that touches nature magic is caught and stopped dead
+function vineCatch(t,src){if(t.st!=='vortex'||clock<(t.vineCatchAt||-9))return;t.vineCatchAt=clock+2.2;endVortex(t,true);t.rootImm=0;
+  setStatus(t,'bound',1.25);setStatus(t,'root',1.9);t.rootImm=3;fxWrap(t,{n:4,h:1.9,dur:1.25,grow:.3});
+  float(t,'TORNADO CAUGHT','#9be55a');fxRing(t.pos,'#62d65a',.4,2.2,.35);emit(chest(t),'#c6f07a',16,4,.2);shakeIt(.2);snd('heavy')}
+// a magic beanstalk: twisting green vines that shoot up from a seed and carry a fighter into the sky
+function fxTree(pos,h,dur){const g=new T.Group();g.position.set(pos.x,0,pos.z);g.rotation.y=rand(0,TAU);const parts=[];
+  const STALK=['#3f9a34','#57b83f','#2f8a2a'];
+  for(let v=0;v<3;v++){const pts=[],ph=v/3*TAU;for(let i=0;i<=24;i++){const u=i/24,a=ph+u*TAU*2.2,r=lerp(.42,.22,u);pts.push(V(Math.cos(a)*r,lerp(-.3,h+.05,u),Math.sin(a)*r))}
+    const curve=new T.CatmullRomCurve3(pts),geo=taperTube(curve,90,8,.2,.11,1),m=new T.Mesh(geo,M(STALK[v]));m.castShadow=true;geo.setDrawRange(0,0);g.add(m);parts.push({m,seg:90,rad:8,u0:0,u1:1});
+    // broad leaves sprouting along each vine
+    for(let q=1;q<6;q++){const u=q/6+v*.05,pt=curve.getPointAt(Math.min(.97,u)),out=V(pt.x,0,pt.z).normalize(),lf=new T.Group();
+      const blade=new T.Mesh(sph(1,12,8),M(q%2?'#4fb83a':'#6fd24a'));blade.scale.set(.42,.05,.3);blade.position.x=.36;lf.add(blade);
+      const vein=new T.Mesh(cyl(.015,.015,.5,4),M('#2f7a28'));vein.rotation.z=Math.PI/2;vein.position.x=.25;lf.add(vein);
+      lf.position.copy(pt);lf.rotation.set(rand(-.5,.5),-Math.atan2(out.z,out.x),rand(.6,.95));lf.scale.setScalar(.001);g.add(lf);parts.push({leaf:lf,u})}
+    // curly tendrils
+    for(let q=0;q<2;q++){const u=.25+q*.35+v*.06,pt=curve.getPointAt(u),out=V(pt.x,0,pt.z).normalize(),tp=[];for(let i=0;i<=10;i++){const k=i/10,a=k*TAU*1.3,r=.32*(1-k*.7);tp.push(V(pt.x+out.x*(.15+k*.35)+Math.cos(a)*r*.4,pt.y+Math.sin(a)*r,pt.z+out.z*(.15+k*.35)+Math.sin(a)*r*.4))}
+      const tg=taperTube(new T.CatmullRomCurve3(tp),24,4,.035,.01),tm=new T.Mesh(tg,M('#7fd65a'));tg.setDrawRange(0,0);g.add(tm);parts.push({m:tm,seg:24,rad:4,u0:u,u1:u+.12})}}
+  // a little leafy cradle under the rider's feet
+  const top=new T.Group();top.position.y=h;g.add(top);
+  for(let q=0;q<5;q++){const a=q/5*TAU,lf=new T.Mesh(sph(1,12,8),M(q%2?'#4fb83a':'#6fd24a'));lf.scale.set(.5,.06,.26);lf.position.set(Math.cos(a)*.42,-.05,Math.sin(a)*.42);lf.rotation.y=-a;lf.rotation.z=.25;top.add(lf)}
+  top.scale.setScalar(.001);world.add(g);
+  emit(V(pos.x,.2,pos.z),'#7fd65a',16,3.5,.6);fxRing(V(pos.x,0,pos.z),'#62d65a',.3,2.2,.4);fxFlash(V(pos.x,.3,pos.z),'#dcffb8',1.2,.25);
+  const T0={g,h,age:0,grow:.6};
+  fx(g,dur,(gg,k,dt)=>{T0.age+=dt||0;const a=T0.age,gr=clamp(a/T0.grow,0,1),e=1-Math.pow(1-gr,3),sink=clamp((a-(dur-.7))/.7,0,1),vis=e*(1-sink*sink);
+    for(const p of parts){if(p.m){const f=clamp((vis-p.u0)/(p.u1-p.u0),0,1);p.m.geometry.setDrawRange(0,Math.floor(f*p.seg)*p.rad*6)}else{const on=vis>p.u?Math.min(1,(vis-p.u)*6):0;p.leaf.scale.setScalar(on||.001);p.leaf.rotation.x=Math.sin(a*3+p.u*9)*.12}}
+    top.scale.setScalar(vis>.95?Math.min(1,(vis-.95)*20):.001);gg.rotation.y+=(dt||0)*.15*(1-gr);
+    if(sink>0&&Math.random()<.4)emit(V(pos.x+rand(-.6,.6),h*vis,pos.z+rand(-.6,.6)),'#6fd24a',1,1,.4,1.1)});
+  later(dur+.1,()=>disposeOwn(g));return T0}
+function treeH(T0){if(!T0)return 0;const gr=clamp(T0.age/T0.grow,0,1);return T0.h*(1-Math.pow(1-gr,3))}
 KITS.bramble={
   passive:['Rootbound','Standing on your own vines slowly heals you. Careful, fire burns vines.'],
   hud:f=>'Pods '+pods.filter(p=>p.owner===f).length+' / 3',
@@ -2414,9 +2482,31 @@ KITS.bramble={
   e:{n:'Spore Pod',d:'Plant a pod (up to 3). When a foe steps close it bursts for heavy damage and leaves a poison cloud.',cd:3.5,ai:[0,6],run(f){cast(f,.25);const at=f.pos.clone().addScaledVector(fwd(f),1.4);at.y=0;if(Math.hypot(at.x,at.z)>PLAT_R-.3)return false;
     const mine=pods.filter(p=>p.owner===f);if(mine.length>=3)popPod(mine[0],true);
     const g=new T.Group();g.position.copy(at);add(g,sph(.32,12,10),M('#7a3f8a'),0,.25,0);add(g,sph(.1,8,6),B('#c6f07a'),0,.5,0);world.add(g);pods.push({g,pos:at,owner:f,arm:.6,dead:false})}},
-  r:{n:'Overgrowth',cost:100,d:'Signature. Vines erupt across the whole arena floor, everywhere except right around you. Grounded foes are rooted at once.',run(f){tick('OVERGROWTH','#9be55a',f);
-    for(let i=0;i<22;i++){const a=rand(0,Math.PI*2),r=rand(2.5,13);const p=clampPlat(V(f.pos.x+Math.cos(a)*r,0,f.pos.z+Math.sin(a)*r),PLAT_R-1.5);if(hdist(p,f.pos)<2.2)continue;later(i*.03,()=>addHazard('vines',p,1.6,8,f))}
-    const o=f.foe;later(.3,()=>{addHazard('vines',o.pos,1.8,8,f);if(o.grounded){o.rootImm=0;setStatus(o,'root',1.4)}});snd('boom')}},
+  x:{n:'Skyvine',d:'Plant a magic seed. A giant beanstalk of twisting vines shoots up beneath your feet and carries you high into the sky. Then you leap off the top and come crashing down on your foe with a heavy staff strike that breaks guard and roots them.',cd:9,ai:[2,13],run(f){
+    const base=f.pos.clone();base.y=0;clampPlat(base,PLAT_R-1);const H=4.4;let tree=null;f.vel.set(0,0,0);
+    special(f,{dur:1.32,kin:true,pose:'windup',start(f,s){tree=fxTree(base,H,3.4);s.tree=tree;snd('heavy');shakeIt(.15);aoe(f,base,1.7,6,{el:'nature',kb:6,up:9})},
+      update(f,dt,s){const t=s.t;
+        if(t<.6){f.pos.set(base.x,Math.max(0,treeH(s.tree)),base.z);if(f.foe)f.yaw=turnTo(f.yaw,Math.atan2(f.foe.pos.x-f.pos.x,f.foe.pos.z-f.pos.z),10*dt)}
+        else if(t<.8){f.pos.set(base.x,H,base.z);s.pose='leap';if(f.foe)f.yaw=turnTo(f.yaw,Math.atan2(f.foe.pos.x-f.pos.x,f.foe.pos.z-f.pos.z),14*dt)}
+        else{if(!s.to){const o=f.foe;let to=o?o.pos.clone():base.clone().addScaledVector(fwd(f),5);to.y=0;const d=hdist(to,base);if(d>13)to=base.clone().addScaledVector(dirTo(base,to),13);clampPlat(to,PLAT_R-1);s.to=to;s.pose='rush';s.iframes=true;telegraph(to,'#62d65a',3.2,.5);snd('dash')}
+          const k=Math.min(1,(t-.8)/.52),e=k*k;f.pos.x=lerp(base.x,s.to.x,k);f.pos.z=lerp(base.z,s.to.z,k);f.pos.y=lerp(H,0,e)+Math.sin(k*Math.PI)*1.6;f.yaw=Math.atan2(s.to.x-base.x,s.to.z-base.z)||f.yaw;
+          if(Math.random()<.6)emit(chest(f),LEAF2,1,1,-.2)}},
+      end(f,s,c){if(c){f.vel.set(0,-2,0);return}f.pos.y=0;f.grounded=true;
+        aoe(f,f.pos,3.3,17,{el:'nature',kb:11,up:7,heavy:true,guardBreak:true});fxRing(f.pos,'#62d65a',.5,3.8,.45);fxFlash(V(f.pos.x,.6,f.pos.z),'#dcffb8',3,.3);dustBurst(f.pos,1,'#6b4a2e');shakeIt(.55);
+        for(let i=0;i<7;i++){const a=i/7*TAU;fxSpike(V(f.pos.x+Math.cos(a)*2.2,0,f.pos.z+Math.sin(a)*2.2),'#5a3a22')}addHazard('vines',f.pos.clone(),2.3,5,f);emit(V(f.pos.x,.4,f.pos.z),LEAF,22,6,.6);snd('boom')}});
+    float(f,'SKYVINE','#9be55a')}},
+  r:{n:"Elder's Embrace",cost:100,d:'Signature. Ancient roots tear up through the floor under your foe, coil around their whole body and lift them off the ground. They are held for 2.6 seconds as the roots squeeze, then crush them and fling them away. Vines spread across the arena around them.',ai:[0,30],run(f){const o=f.foe;if(!o||o.hp<=0)return false;tick("ELDER'S EMBRACE",'#9be55a',f);
+    const at=o.pos.clone();at.y=0;fxRing(at,'#62d65a',.4,2.6,.4);telegraph(at,'#9be55a',2.2,.35);
+    // cracks race from Bramble to the foe
+    const d=dirTo(f.pos,at),L=hdist(f.pos,at);for(let i=1;i<=6;i++)later(i*.045,()=>{const p=f.pos.clone().addScaledVector(d,L*i/7);p.y=0;emit(V(p.x,.15,p.z),'#7a5232',4,2.5,1);fxRing(p,'#5a3a22',.2,.8,.25)});
+    later(.32,()=>{if(o.hp<=0)return;endSpecials(o);if(o.st==='vortex')endVortex(o,true);o.rootImm=0;o.iframes=0;
+      const W=fxWrap(o,{n:7,h:2.2,dur:2.6,grow:.6,lift:.75,thick:1.6,claws:5});setStatus(o,'bound',2.6);o.boundY=Math.max(.75,Math.min(2.5,o.pos.y));o.grounded=false;
+      emit(V(at.x,.3,at.z),'#7a5232',24,6,1.2,1.2);
+      for(let i=0;i<10;i++){const a=rand(0,TAU),r=rand(2.6,9);const p=clampPlat(V(o.pos.x+Math.cos(a)*r,0,o.pos.z+Math.sin(a)*r),PLAT_R-1.5);if(hdist(p,f.pos)<2.2)continue;later(.1+i*.04,()=>addHazard('vines',p,1.5,7,f))}
+      float(o,'ENTANGLED','#9be55a');fxFlash(chest(o),'#c6f07a',2.2,.3);shakeIt(.5);snd('boom');
+      for(let i=1;i<=5;i++)later(i*.42,()=>{if(o.hp<=0||!(o.status.bound>0))return;damage(f,o,2.6,{el:'nature',kb:0,up:0,noStun:true});emit(chest(o),'#7a5232',6,2.5,.6);shakeIt(.12);snd('block')});
+      later(2.55,()=>{if(o.hp<=0)return;o.status.bound=0;o.boundY=null;wrapRelease(W,true);fxFlash(chest(o),'#dcffb8',3,.35);fxRing(o.pos,'#62d65a',.5,3.6,.4);shakeIt(.6);
+        damage(f,o,16,{el:'nature',dir:dirTo(f.pos,o.pos),kb:14,up:9,heavy:true,guardBreak:true});snd('boom')})})}},
   update(f,dt){if(f.onVines&&f.hp>0&&f.hp<f.maxhp)f.hp=Math.min(f.maxhp,f.hp+3*dt)}
 };
 let shades=[],windWalls=[],decoys=[],rains=[];
@@ -2809,6 +2899,7 @@ function useSkill(f,k){
 }
 function turnTo(a,b,max){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+clamp(d,-max,max)}
 function physics(f,dt){
+  if(f.status.bound>0){f.vel.set(0,0,0);if(f.boundY!=null){f.grounded=false;f.pos.y+=(f.boundY-f.pos.y)*Math.min(1,dt*5);return}}else if(f.boundY!=null)f.boundY=null;
   const kin=f.st==='special'&&f.special&&f.special.kin;
   const r=Math.hypot(f.pos.x,f.pos.z);const over=r<=safeR;
   if(!kin){
@@ -3064,6 +3155,7 @@ function animate(f,dt){
     else if(pose==='windup'){const k2=Math.min(1,f.special.t/.4);ty=-1.5*k2;hy=.95-.13*k2;Kn=[.8*k2,.8*k2];Lg=[-.3*k2,.3*k2];A=[-.6,-.6];AZ=[.9*k2,-.9*k2];F=[-1.2,-1.2];tx=.2*k2}
     else if(pose==='channel'){A=[-2.6,-2.6];AZ=[.6,-.6];F=[-.3,-.3];tx=-.2}}
   if(f.status.zerog>0){A=[-2.4,-2.2];AZ=[.6,-.6];Lg=[.3,-.3];Kn=[.6,.6];tx=Math.sin(t*2)*.3}
+  if(f.status.bound>0){A=[.15,.15];AZ=[.22,-.22];F=[-.5,-.5];Lg=[.05,-.05];Kn=[.1,.1];tx=Math.sin(t*11)*.07;tz=Math.sin(t*8.3)*.1;ty=Math.sin(t*6.1)*.15}
   if(f.status.shock>0){tx+=Math.sin(t*60)*.08;ty+=Math.sin(t*47)*.08}
   if(f.def.weapon==='bow'&&(st==='cast')){A=[-1.57,-1.57];AZ=[-.1,0];F=[0,-1.2]}
   if(f.hitT>0&&f.hitDir){f.hitT-=dt;const lc=f.hitDir.clone().applyAxisAngle(V(0,1,0),-f.yaw);const k2=Math.min(1,f.hitT/.3);tx+=lc.z*.7*k2;tz+=lc.x*.6*k2;headX+=lc.z*.4*k2}
@@ -3453,7 +3545,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=78;
+const NET_VER=79;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
@@ -3809,7 +3901,7 @@ function endMatch(won){
   }
   saveProg();syncTitleStats();show('m-result');
 }
-function tipFor(d){const tips={prism:'Prism\'s shards each carry a different element. Close the gap; her fan is weakest point-blank.',doppel:'Doppel copies your ultimate. Spend yours first, and attack the real one: the fake shatters if you hit it.',vane:'Vane hits hard but turns slowly. Bait Cataclysm, then punish while he lands.',cinder:'Cinder burns the floor. Fight away from fire patches and punish after Meteor Dive lands.',tempest:'Stay dry. Lightning hits much harder on wet, icy or metal targets.',basalt:'Basalt is slow. Circle him and dash out of his fissure line.',rime:'Rime freezes chilled targets. Break line of sight after the first shard hits.',tide:'Avoid the puddles. They heal Tidecaller and carry lightning.',gloam:'Gloam hides in pillar shadows. Heavy hits can shatter the pillars he uses. When his shadow doubles rise, block and back away. They fade after a few seconds.',orbit:'Dash away from slow bubbles, and stay grounded when Orbit has stones up.',bramble:'Watch the floor for vine warnings and pods. Fire burns vines away.',dash:'Block, then counter. Dash phases through projectiles, so use melee.',anvil:'Iron Anvil shrugs off hits. Wait for flesh form or use lightning.',echo:'Do not feed Echo-Glass elements. Melee pressure keeps her shield empty.',cipher:'Cipher dodges the first melee hit every 7 seconds. Bait it with a light slash, then commit.',murk:'Clear Murk smoke with a vortex or stay out of it. He is far harder to hit inside.',locust:'Locust flings foes far. Stay out of his cyclone and block his Slipstream dash.',aurel:'When Aurel vanishes, watch the floor for glints and keep moving so the first strike misses.'};return 'Tip: '+(tips[d.id]||'Block right before a hit lands to parry.')}
+function tipFor(d){const tips={prism:'Prism\'s shards each carry a different element. Close the gap; her fan is weakest point-blank.',doppel:'Doppel copies your ultimate. Spend yours first, and attack the real one: the fake shatters if you hit it.',vane:'Vane hits hard but turns slowly. Bait Cataclysm, then punish while he lands.',cinder:'Cinder burns the floor. Fight away from fire patches and punish after Meteor Dive lands.',tempest:'Stay dry. Lightning hits much harder on wet, icy or metal targets.',basalt:'Basalt is slow. Circle him and dash out of his fissure line.',rime:'Rime freezes chilled targets. Break line of sight after the first shard hits.',tide:'Avoid the puddles. They heal Tidecaller and carry lightning.',gloam:'Gloam hides in pillar shadows. Heavy hits can shatter the pillars he uses. When his shadow doubles rise, block and back away. They fade after a few seconds.',orbit:'Dash away from slow bubbles, and stay grounded when Orbit has stones up.',bramble:'Watch the floor for vine warnings and pods. Vines catch a spinning vortex, so do not spin through them. When a beanstalk shoots up, move: Bramble is about to leap down onto you.',dash:'Block, then counter. Dash phases through projectiles, so use melee.',anvil:'Iron Anvil shrugs off hits. Wait for flesh form or use lightning.',echo:'Do not feed Echo-Glass elements. Melee pressure keeps her shield empty.',cipher:'Cipher dodges the first melee hit every 7 seconds. Bait it with a light slash, then commit.',murk:'Clear Murk smoke with a vortex or stay out of it. He is far harder to hit inside.',locust:'Locust flings foes far. Stay out of his cyclone and block his Slipstream dash.',aurel:'When Aurel vanishes, watch the floor for glints and keep moving so the first strike misses.'};return 'Tip: '+(tips[d.id]||'Block right before a hit lands to parry.')}
 function togglePause(){if(match&&match.mode==='online'&&NET.live){NET.menu=!NET.menu;$('p-cam').textContent='Camera: '+CAM_NAMES[camMode];$('p-switch').hidden=true;show(NET.menu?'m-pause':null);$('hud').hidden=false;return}if(roundOver)return;paused=!paused;$('p-cam').textContent='Camera: '+CAM_NAMES[camMode];$('p-switch').hidden=!(match&&match.mode==='training');show(paused?'m-pause':null);$('hud').hidden=false}
 $('p-resume').onclick=()=>togglePause();
 $('p-cam').onclick=()=>{cycleCam();snd('ui')};
@@ -3839,7 +3931,7 @@ function goTitle(){if(NET.code&&NET.stage!=='menu')netLeave();mode='title';pause
   // title duo
   P=mkFighter(BYID.cinder,false,0);E=mkFighter(BYID.anvil,false,0);P.foe=E;E.foe=P;placeFighter(P,V(-1.4,0,1),Math.PI/2);placeFighter(E,V(1.6,0,-.6),-Math.PI/2);
   syncTitleStats();show('m-title')}
-$('chem').innerHTML=[['fire','Fire melts ice into water, burns vines and spore gas, and thaws frozen foes.'],['storm','Lightning deals 1.5x and stuns targets that are wet, on water or ice, or made of metal. It spreads through puddles.'],['water','Water puts out fire and soaks foes, which sets up lightning.'],['ice','Hitting a chilled foe with frost freezes them solid. Any other hit shatters the ice for bonus damage.'],['nature','Vines root foes in place. Fire burns them away.']].map(([e,t])=>`<li><span class="glyph" style="color:${EL[e].c}">${glyph(e)}</span><span>${t}</span></li>`).join('');
+$('chem').innerHTML=[['fire','Fire melts ice into water, burns vines and spore gas, and thaws frozen foes.'],['storm','Lightning deals 1.5x and stuns targets that are wet, on water or ice, or made of metal. It spreads through puddles.'],['water','Water puts out fire and soaks foes, which sets up lightning.'],['ice','Hitting a chilled foe with frost freezes them solid. Any other hit shatters the ice for bonus damage.'],['nature','Vines root foes in place and stop a spinning vortex. Fire burns them away.']].map(([e,t])=>`<li><span class="glyph" style="color:${EL[e].c}">${glyph(e)}</span><span>${t}</span></li>`).join('');
 
 const STAGE_NAMES=['The Invitation','Trial of the Arena','Swarm Ambush','Rival Showdown','Championship Finale'];
 const TAUNT={prism:"Hold still. I want to see what colour you break into.",doppel:"Nice face. I think I'll borrow it.",vane:"I was champion here before you could walk. Kneel.",cinder:"Keep up, or get scorched. The floor is my stage tonight.",tempest:"Hear that crackle? That's the sky choosing a side.",basalt:"I have stood through a thousand storms. You are a breeze.",rime:"Mind your footing. Everything slips eventually.",locust:"The wind doesn't wait. Neither do I.",tide:"Every wave returns to the shore. You will fall the same way.",gloam:"You won't see me. You'll only remember the dark.",orbit:"Gravity is a suggestion. I'll make it a sentence.",bramble:"Roots run deep here. Step carefully.",dash:"Blink and it's over. Actually, don't even blink.",anvil:"Swing all you like. Iron doesn't flinch.",echo:"Show me your best move. I'll show it right back.",cipher:"I already know how this ends. Shall we pretend?",murk:"Breathe in. That's the last clear breath you'll take.",aurel:"Smile for the crowd. You'll want them to remember you."};
