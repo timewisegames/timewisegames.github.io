@@ -877,6 +877,40 @@ function sculptHead(){const g=new T.SphereGeometry(.2,30,22);const a=g.attribute
     if(z>0&&Math.abs(n)<.55)z*=.97;
     a[i]=x;a[i+1]=y*1.1;a[i+2]=z}
   g.computeVertexNormals();return g}
+
+/* ================= SCULPTED BODY PARTS (Enhanced graphics) ================= */
+let SCULPT=false;
+function sprof(ctrl,n){const c=new T.SplineCurve(ctrl.map(([r,y])=>new T.Vector2(r,y)));return c.getPoints(n||30).map(v=>[Math.max(v.x,0),v.y])}
+function lathe(key,ctrl,segs){return geo('L'+key,()=>{const pts=sprof(ctrl).map(([r,y])=>new T.Vector2(Math.max(r,.0004),y));const g=new T.LatheGeometry(pts,segs||22);g.computeVertexNormals();return g})}
+const PRO={
+  pelvis:[[0,-.15],[.11,-.14],[.165,-.11],[.19,-.05],[.2,.02],[.19,.08],[.12,.1],[0,.105]],
+  thigh:[[0,-.575],[.06,-.565],[.088,-.535],[.096,-.47],[.112,-.34],[.128,-.17],[.132,-.06],[.12,.01],[.085,.05],[0,.065]],
+  thighH:[[0,-.575],[.07,-.565],[.1,-.53],[.118,-.42],[.136,-.25],[.142,-.09],[.132,.0],[.09,.05],[0,.065]],
+  shin:[[0,-.435],[.05,-.425],[.058,-.39],[.062,-.31],[.084,-.17],[.1,-.075],[.096,-.0],[.07,.035],[0,.048]],
+  shinH:[[0,-.435],[.06,-.425],[.072,-.37],[.1,-.28],[.114,-.15],[.11,-.04],[.094,.025],[0,.048]],
+  torso:[[0,-.03],[.168,-.015],[.178,.07],[.17,.16],[.188,.26],[.252,.41],[.308,.55],[.336,.65],[.33,.73],[.275,.795],[.175,.845],[.1,.872],[0,.88]],
+  neck:[[0,.72],[.098,.73],[.09,.8],[.08,.86],[.074,.9],[0,.905]],
+  uarm:[[0,-.405],[.045,-.397],[.066,-.372],[.073,-.33],[.079,-.27],[.092,-.2],[.095,-.155],[.088,-.1],[.094,-.045],[.1,.0],[.096,.045],[.077,.08],[.042,.1],[0,.106]],
+  farm:[[0,-.318],[.044,-.307],[.05,-.28],[.057,-.2],[.071,-.1],[.078,-.04],[.074,.0],[.058,.03],[0,.044]]};
+function rbox(w,h,d,r,seg){return geo(`rb${w}_${h}_${d}_${r}`,()=>{const s=seg||5,g=new T.BoxGeometry(w,h,d,s,s,s),p=g.attributes.position,nm=g.attributes.normal,hw=w/2-r,hh=h/2-r,hd=d/2-r,v=new T.Vector3(),c=new T.Vector3();
+  for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);c.set(clamp(v.x,-hw,hw),clamp(v.y,-hh,hh),clamp(v.z,-hd,hd));v.sub(c);if(v.lengthSq()<1e-12)v.set(0,1,0);v.normalize();nm.setXYZ(i,v.x,v.y,v.z);p.setXYZ(i,c.x+v.x*r,c.y+v.y*r,c.z+v.z*r)}return g})}
+/* a curved, tapered lock of hair along +Y (drop-in for a cone of the same height) */
+function lockGeo(r,h,bend){bend=bend==null?.35:bend;return geo(`lk${r}_${h}_${bend}`,()=>{const pts=[];for(let i=0;i<=6;i++){const t=i/6;pts.push(new T.Vector3(0,-h/2+t*h,bend*h*t*t*.6))}
+  const cv=new T.CatmullRomCurve3(pts),TS=14,RS=8,g=new T.TubeGeometry(cv,TS,r,RS,false),p=g.attributes.position;
+  for(let i=0;i<=TS;i++){const t=i/TS,c=cv.getPointAt(t),k=Math.max(.06,Math.pow(1-t,.75))*(t<.08?.85+t*1.8:1);for(let j=0;j<=RS;j++){const n=i*(RS+1)+j;p.setXYZ(n,c.x+(p.getX(n)-c.x)*k*1.25,c.y+(p.getY(n)-c.y)*k,c.z+(p.getZ(n)-c.z)*k*.72)}}
+  g.computeVertexNormals();return g})}
+/* head with a tapered jaw, flat cheekbones and a soft brow ridge */
+function sculptHead2(){const g=new T.SphereGeometry(.2,36,28);const a=g.attributes.position.array;
+  for(let i=0;i<a.length;i+=3){let x=a[i],y=a[i+1],z=a[i+2];const n=y/.2;
+    if(n<.15){const k=Math.pow((.15-n)/1.15,1.15);x*=1-.5*k;z*=z>0?1-.04*k:1-.55*k}
+    if(z>0&&n<-.55)z+=.026*((-.55-n)/.45);
+    if(z>0&&n>-.35&&n<.02)x*=1.03;
+    if(n>-.4&&n<-.05&&Math.abs(x)>.13)x*=.965;
+    if(z>.1&&n>.22&&n<.42)z+=.011*Math.sin((n-.22)/.2*Math.PI)*(1-Math.abs(x)/.2);
+    if(z<0&&n>-.25)z*=1.08;
+    if(z>0&&Math.abs(n)<.55)z*=.965;
+    a[i]=x;a[i+1]=y*1.12;a[i+2]=z}
+  g.computeVertexNormals();return g}
 function landC(f){if(!(f.landT>0))return 0;const e=.26-f.landT;return (e<.1?1:1-smoothstep(0,1,(e-.1)/.16))*(f.landK||.5)}
 function smoothstep(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
 function veiledFor(f){return !!(f&&f.veil>0&&f!==P&&!((f.dustT||0)>.4)&&!((f.shim||0)>0))}
@@ -894,11 +928,11 @@ function makeRibbon(parent,w,len,segs,mat,pos,arr,stiff,tp){const g=new T.PlaneG
 function animRibbon(rb,t,lift,ph){const a=rb.g.attributes.position.array,b=rb.base,L=rb.len;for(let i=0;i<a.length;i+=3){const y=b[i+1],u=-y/L;const sw=(.12+lift*.88)*rb.stiff;const wave=Math.sin(t*7+u*5+ph)*(.03+lift*.1)*u;a[i]=b[i]+Math.sin(t*3+ph+u*2)*.02*u;a[i+1]=y*(1-sw*.75*u);a[i+2]=b[i+2]-sw*u*L*.9+wave}rb.g.attributes.position.needsUpdate=true;rb.g.computeVertexNormals()}
 function buildHair(d,h,m){const H=HAIR[d.id];if(!H)return;const hm=m.hair;
   if(H[0]!=='side'&&H[0]!=='slick'){const cap=add(h,geo('hcap2',()=>new T.SphereGeometry(.214,18,10,0,Math.PI*2,0,Math.PI*.36)),hm,0,.03,-.005);cap.rotation.x=-.18;add(h,geo('hside',()=>new T.SphereGeometry(.212,18,10,Math.PI/2+.75,Math.PI*2-1.5,Math.PI*.34,Math.PI*.3)),hm,0,.03,-.005)}
-  if(H[0]==='long'){add(h,sph(.07,10,8),hm,0,.17,-.17);add(h,tor(.05,.015,6,12),M('#e0c070'),0,.17,-.21);add(h,cone(.07,.5,10),hm,0,-.02,-.3,-.35,0,0);[-1,1].forEach(q=>add(h,box(.05,.22,.06),hm,q*.18,-.04,.06,0,0,q*.08))}
-  if(H[0]==='messy'){for(let i=0;i<9;i++)add(h,cone(.055,.17,4),hm,rand(-.15,.15),.16+rand(0,.03),rand(-.16,.08),rand(-.7,.4),rand(0,3),rand(-.6,.6))}
+  if(H[0]==='long'){add(h,sph(.07,10,8),hm,0,.17,-.17);add(h,tor(.05,.015,6,12),M('#e0c070'),0,.17,-.21);add(h,SCULPT?lockGeo(.075,.52,-.25):cone(.07,.5,10),hm,0,-.02,-.3,-.35,0,0);[-1,1].forEach(q=>add(h,box(.05,.22,.06),hm,q*.18,-.04,.06,0,0,q*.08))}
+  if(H[0]==='messy'){for(let i=0;i<9;i++)add(h,SCULPT?lockGeo(.05,.2,.55):cone(.055,.17,4),hm,rand(-.15,.15),.16+rand(0,.03),rand(-.16,.08),rand(-.7,.4),rand(0,3),rand(-.6,.6))}
   if(H[0]==='short'){add(h,box(.26,.05,.06),hm,0,.13,.155,.3,0,0)}
-  if(H[0]==='swept'){for(let i=0;i<6;i++)add(h,cone(.055,.24,4),hm,-.12+i*.048,.13+Math.sin(i)*.02,-.08,-1.85,0,0)}
-  if(H[0]==='float'){for(let i=0;i<3;i++){const a=(i-1)*.7;add(h,cyl(.025,.04,.32,6),hm,Math.sin(a)*.14,.3,-.06,.25,0,-a*.9);add(h,sph(.04,8,6),M('#f2b6ff'),Math.sin(a)*.24,.44,-.02).castShadow=false}}
+  if(H[0]==='swept'){for(let i=0;i<6;i++)add(h,SCULPT?lockGeo(.052,.28,.3):cone(.055,.24,4),hm,-.12+i*.048,.13+Math.sin(i)*.02,-.08,-1.85,0,0)}
+  if(H[0]==='float'){for(let i=0;i<3;i++){const a=(i-1)*.7;add(h,SCULPT?lockGeo(.04,.34,.4):cyl(.025,.04,.32,6),hm,Math.sin(a)*.14,.3,-.06,.25,0,-a*.9);add(h,sph(.04,8,6),M('#f2b6ff'),Math.sin(a)*.24,.44,-.02).castShadow=false}}
   if(H[0]==='quiff'){const sw=add(h,sph(.11,16,10),hm,.02,.2,.07,-.5,0,-.18);sw.scale.set(1.55,.62,1.25);const tp=add(h,sph(.1,16,10),hm,-.03,.25,-.04,.2,0,.15);tp.scale.set(1.6,.55,1.5);const fr=add(h,sph(.06,12,8),hm,-.1,.205,.15,-.9,0,.4);fr.scale.set(1.2,.6,1.3);[-1,1].forEach(q=>add(h,box(.03,.09,.05),hm,q*.195,-.01,.05))}
   if(H[0]==='slick'){// one smooth shell combed straight back from the hairline, ending at the nape
     const sh=new T.Mesh(geo('slickShellW3',()=>{const g=new T.SphereGeometry(.226,40,36,0,Math.PI*2,0,Math.PI*.6),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),r=Math.hypot(x,y,z),th=Math.acos(clamp(y/r,-1,1)),ph=Math.atan2(z,x);const k=1+.022*Math.sin(th*14+Math.sin(ph*2)*.6)*Math.min(1,th*3);p.setXYZ(i,x*k,y*k,z*k)}g.computeVertexNormals();return g}),hm);sh.rotation.x=-.7;sh.position.set(0,.022,-.01);sh.scale.set(1.02,.985,1.03);sh.castShadow=true;h.add(sh);
@@ -931,6 +965,7 @@ function buildHead2(d,h,m,rune,ribbons,torso){
   return false;
 }
 function buildRig(d){
+  const SC=SCULPT=window.__visReady?VIS.on:store.get('ac-vis',true);
   const s=d.size||1,root=new T.Group();root.rotation.order='YXZ';const cloth=[];
   const body=new T.Group();body.scale.setScalar(s);root.add(body);
   const el=EL[d.el];
@@ -943,23 +978,25 @@ function buildRig(d){
   const robe=['halo','straw','antlers','monk'].includes(d.head)&&id!=='cipher';
   const glove=d.vortex||d.minion||d.id==='cipher'?mats.black:mats.skin;
   const broad=id==='basalt'?1.25:id==='anvil'?1.15:1;
-  const sleeveless=['basalt','cinder'].includes(id);const suit=id==='cipher';
-  add(hips,cyl(.2,.18,.2,12),mats.dark,0,-.02,0).scale.x=broad;
+  const sleeveless=['basalt','cinder'].includes(id);const suit=id==='cipher';const hk=!d.vortex&&!robe&&!suit;
+  if(SC){const pv=add(hips,lathe('pelvis',PRO.pelvis,20),mats.dark,0,0,0);pv.scale.set(broad,1,.86)}else add(hips,cyl(.2,.18,.2,12),mats.dark,0,-.02,0).scale.x=broad;
   const legs=[],shins=[];
   [-1,1].forEach(q=>{const th=new T.Group();th.position.x=q*.12*broad;hips.add(th);
-    add(th,cyl(.118,.095,.56,12),mats.dark,0,-.27,0);
+    if(SC)add(th,lathe(hk?'thighH':'thigh',hk?PRO.thighH:PRO.thigh,18),mats.dark,0,0,0).scale.z=.94;else add(th,cyl(.118,.095,.56,12),mats.dark,0,-.27,0);
     const sh=new T.Group();sh.position.y=-.5;th.add(sh);
-    add(sh,cyl(.1,.058,.46,12),mats.dark,0,-.2,0);
+    if(SC)add(sh,lathe(hk?'shinH':'shin',hk?PRO.shinH:PRO.shin,18),mats.dark,0,0,0).scale.z=.94;else add(sh,cyl(.1,.058,.46,12),mats.dark,0,-.2,0);
     if(d.vortex){for(let k=0;k<3;k++)add(sh,tor(.07,.012,4,12),mats.acc,0,-.31-k*.04,0,Math.PI/2)}else add(sh,cyl(.076,.07,.1,12),mats.acc,0,-.37,0);
-    add(sh,box(.14,.09,.26),mats.black,0,-.46,.03);add(sh,sph(.072,10,8),mats.black,0,-.46,.15).scale.set(1,.7,1);
+    if(SC){add(sh,rbox(.125,.085,.2,.036),mats.black,0,-.462,.012);add(sh,rbox(.11,.06,.09,.03),mats.black,0,-.425,-.045);add(sh,rbox(.046,.062,.08,.022),mats.black,-q*.035,-.472,.132);add(sh,rbox(.068,.056,.074,.022),mats.black,q*.026,-.475,.126)}
+    else{add(sh,box(.14,.09,.26),mats.black,0,-.46,.03);add(sh,sph(.072,10,8),mats.black,0,-.46,.15).scale.set(1,.7,1)}
     legs.push(th);shins.push(sh)});
   if(robe){cloth.push(makeCloth(add(hips,cone(.47,.8,14),mats.main,0,-.3,0),1));if(id==='tide')cloth.push(makeCloth(add(hips,cone(.4,.55,14),mats.acc,0,-.18,0),.8))}
   const torso=new T.Group();hips.add(torso);if(broad!==1)torso.scale.x=broad;
   const fem=id==='echo';if(fem){torso.scale.set(.86,1,.88);[-1,1].forEach(q=>{const t=add(hips,cone(.17,.34,4),mats.acc,q*.13,-.12,.04,0,0,q*.12);t.rotation.y=Math.PI/4});makeRibbon(hips,.22,.38,4,mats.main,V(0,-.04,.17),ribbons,.3)}
+  if(SC&&!suit){add(torso,lathe('torso',PRO.torso,28),mats.main,0,0,0).scale.z=.76}else{
   add(torso,suit?cyl(.27,.26,.3,16):cyl(.2,.175,.3,14),mats.main,0,.15,0).scale.z=suit?.76:.8;
   add(torso,suit?cyl(.29,.27,.44,16):cyl(.33,.21,.44,16),mats.main,0,.5,0).scale.z=.74;
   add(torso,suit?cyl(.2,.29,.1,16):cyl(.17,.33,.1,16),mats.main,0,.77,0).scale.z=.74;
-  [-1,1].forEach(q=>{const tp=add(torso,sph(.13,12,8),mats.main,q*.19,.8,-.01);tp.scale.set(1.55,.55,.95);tp.rotation.z=-q*.38});
+  [-1,1].forEach(q=>{const tp=add(torso,sph(.13,12,8),mats.main,q*.19,.8,-.01);tp.scale.set(1.55,.55,.95);tp.rotation.z=-q*.38})}
   add(torso,cyl(suit?.265:.218,suit?.265:.218,.1,16),suit?mats.black:mats.acc,0,.04,0).scale.z=suit?.78:.82;
   if(!suit)add(torso,sph(.05,8,6),mats.acc,.15,.04,.13);
   if(!robe&&!fem&&id!=='aurel'&&!suit){makeRibbon(hips,.3,.36,4,mats.main,V(0,-.03,.17),ribbons,.35,.35);makeRibbon(hips,.3,.38,4,mats.main,V(0,-.03,-.17),ribbons,.45,.35)}
@@ -973,7 +1010,7 @@ function buildRig(d){
     const hem=new T.Mesh(geo('suitHem',()=>new T.CylinderGeometry(.27,.29,.3,20,2,true,.3,Math.PI*2-.6)),mats.main.clone());hem.material.side=T.DoubleSide;hem.position.y=-.13;hem.scale.z=.8;hem.castShadow=true;torso.add(hem);cloth.push(makeCloth(hem,.5))}
   else add(torso,box(.07,.5,.03),mats.acc,-.05,.48,.21,0,0,.5);
   if(!suit)add(torso,sph(.05,10,8),rune,.09,.6,.215).castShadow=false;
-  add(torso,cyl(.075,.09,.16,10),mats.skin,0,.82,0);
+  if(SC)add(torso,lathe('neck',PRO.neck,16),mats.skin,0,0,0);else add(torso,cyl(.075,.09,.16,10),mats.skin,0,.82,0);
   if(id==='rime'){const col=new T.Mesh(cyl(.21,.16,.24,16,1,true),mats.main.clone());col.material.side=T.DoubleSide;col.position.y=.92;torso.add(col);add(torso,tor(.21,.015,4,24),TM('#bff4ff'),0,1.04,0,Math.PI/2);makeRibbon(torso,.09,.6,6,mats.acc,V(-.14,.0,.12),ribbons,.5);makeRibbon(torso,.07,.5,6,mats.acc,V(-.18,.0,.08),ribbons,.5)}
   if(id==='anvil'){add(torso,box(.42,.62,.03),TM('#5a3a22'),0,.18,.19);[-1,1].forEach(q=>add(torso,box(.04,.36,.03),TM('#4a2e1a'),q*.15,.62,.2))}
   if(id==='tempest'){const pd=add(torso,sph(.19,12,8),mats.dark,-.36,.76,0);pd.scale.set(1.25,.6,1.1);add(torso,box(.24,.04,.26),new T.MeshBasicMaterial({color:'#6fb6ff'}),-.37,.82,0,0,0,.35).castShadow=false}
@@ -984,11 +1021,11 @@ function buildRig(d){
   if(id==='gloam'||id==='murk'||id==='echo')makeRibbon(torso,.55,1.1,7,id==='echo'?mats.acc:mats.main,V(0,.82,-.22),ribbons,.9);
   if(id==='echo'){const sh=new T.MeshPhongMaterial({color:'#dfe6ee',shininess:120,specular:new T.Color('#ffffff')});[[-.12,.6],[.12,.6],[-.08,.4],[.1,.35],[0,.5]].forEach(([x,y])=>add(torso,geo('oct8',()=>new T.OctahedronGeometry(.05)),sh,x,y,-.23))}
   const scarf=[];
-  const head=new T.Group();head.position.y=1.0;torso.add(head);
-  const skull=add(head,geo('headS',sculptHead),mats.skin,0,.018,0);skull.scale.set(.96,1,1.06);
+  const head=new T.Group();head.position.y=SC?.995:1.0;torso.add(head);if(SC)head.scale.setScalar(.88);
+  const skull=add(head,SC?geo('headS2',sculptHead2):geo('headS',sculptHead),mats.skin,0,.018,0);skull.scale.set(.96,1,1.06);
   if(!(d.vortex||id==='murk'||id==='echo'))add(head,cone(.028,.07,8),mats.skin,0,-.03,.19,-1.35,0,0);
   const mood=MOOD[id]||'calm';
-  [-1,1].forEach(q=>{add(head,sph(.042,8,6),mats.skin,q*.195,-.01,0);
+  [-1,1].forEach(q=>{{const ear=add(head,sph(.042,10,8),mats.skin,q*.195,-.01,0);if(SC)ear.scale.set(.45,1.15,.85)}
     {const sc=add(head,sph(.036,12,8),mats.eye,q*.07,.012,.176);sc.scale.set(1.25,.82,.45);sc.castShadow=false;add(head,sph(.024,10,8),id==='gloam'?TM('#4a2c78'):mats.black,q*.068,.01,.184).castShadow=false;add(head,sph(.008,6,4),B('#ffffff'),q*.068+.01,.02,.206).castShadow=false}
     let bz=-q*.15,by=.066,bh=.016;
     if(mood==='fierce'){bz=q*.35;by=.058}else if(mood==='stern'){bh=.032;bz=q*.15;by=.06}else if(mood==='smirk'&&q>0){bz=-.3;by=.078}else if(mood==='determined'){bz=q*.22}else if(mood==='grin'){by=.072}
@@ -1004,12 +1041,13 @@ function buildRig(d){
   const arms=[],fores=[],hands=[];
   [-1,1].forEach(q=>{const a=new T.Group();a.position.set(q*.39,.69,0);torso.add(a);
     const upM=sleeveless?mats.skin:mats.main;
+    if(SC){add(a,lathe('uarm',PRO.uarm,20),upM,0,0,0).scale.set(1,1,.96);a.position.x=q*.36}else{
     const dl=add(a,sph(.122,14,10),upM,0,-.03,0);dl.scale.set(1.12,1.05,1);
-    add(a,cyl(.105,.078,.38,12),upM,0,-.17,0);add(a,sph(.078,10,8),upM,0,-.35,0);
+    add(a,cyl(.105,.078,.38,12),upM,0,-.17,0);add(a,sph(.078,10,8),upM,0,-.35,0)}
     if(sleeveless&&id==='cinder')add(a,cyl(.105,.105,.06,12),mats.main,0,-.01,0);
     const fo=new T.Group();fo.position.y=-.35;a.add(fo);
     const loM=(d.vortex&&!sleeveless)?mats.main:mats.skin;
-    add(fo,cyl(.075,.05,.3,12),loM,0,-.14,0);
+    if(SC)add(fo,lathe('farm',PRO.farm,18),loM,0,0,0);else add(fo,cyl(.075,.05,.3,12),loM,0,-.14,0);
     if(!d.vortex)add(fo,cyl(.078,.07,.11,12),mats.acc,0,-.2,0);
     if(id==='dash')add(fo,tor(.075,.025,6,12),mats.main,0,-.02,0,Math.PI/2);
     if(id==='cinder')for(let k=0;k<4;k++)add(fo,tor(.064,.012,4,12),TM('#efe6d8'),0,-.08-k*.04,0,Math.PI/2);
@@ -1017,12 +1055,13 @@ function buildRig(d){
     add(fo,tor(.062,.013,6,14),rune,0,-.27,0,Math.PI/2).castShadow=false;
     if(d.vortex&&!sleeveless)for(let k=0;k<3;k++)add(fo,tor(.064,.012,4,12),mats.dark,0,-.05-k*.045,0,Math.PI/2);
     const h=new T.Group();h.position.y=-.31;fo.add(h);
-    add(h,box(.1,.11,.065),glove,0,-.04,0);
+    if(SC){add(h,rbox(.098,.1,.07,.026),glove,0,-.045,0);add(h,rbox(.096,.05,.062,.022),glove,0,-.1,.02,.55,0,0);for(let i=0;i<4;i++)add(h,rbox(.022,.026,.026,.009,3),glove,-.036+i*.024,-.083,.05);add(h,rbox(.034,.062,.036,.015),glove,-q*.054,-.058,.03,0,0,q*.45)}
+    else{add(h,box(.1,.11,.065),glove,0,-.04,0);
     for(let i=0;i<4;i++)add(h,box(.022,.075,.03),glove,-.036+i*.024,-.12,.012,.45,0,0);
-    add(h,box(.028,.065,.03),glove,-q*.06,-.05,.03,0,0,q*.5);
+    add(h,box(.028,.065,.03),glove,-q*.06,-.05,.03,0,0,q*.5)}
     if(id==='basalt')for(let i=0;i<4;i++)add(h,geo('knk',()=>new T.DodecahedronGeometry(.035)),M('#8a7a6a'),-.036+i*.024,-.07,.05);
     arms.push(a);fores.push(fo);hands.push(h)});
-  if(id==='basalt'){arms.forEach(a=>a.scale.set(1.22,1.02,1.22));fores.forEach(f=>f.scale.set(1.1,1,1.1));[-1,1].forEach(q=>{const tp=add(torso,sph(.13,12,8),mats.main,q*.13,.86,-.06);tp.scale.set(1.35,.7,1);const pc=add(torso,sph(.14,12,8),mats.main,q*.11,.58,.15);pc.scale.set(1.15,.85,.5)})}
+  if(id==='basalt'){arms.forEach(a=>a.scale.set(1.22,1.02,1.22));fores.forEach(f=>f.scale.set(1.1,1,1.1));if(!SC)[-1,1].forEach(q=>{const tp=add(torso,sph(.13,12,8),mats.main,q*.13,.86,-.06);tp.scale.set(1.35,.7,1);const pc=add(torso,sph(.14,12,8),mats.main,q*.11,.58,.15);pc.scale.set(1.15,.85,.5)})}
   const weapon=new T.Group();hands[1].add(weapon);weapon.rotation.x=Math.PI/2;
   const offhand=new T.Group();hands[0].add(offhand);
   buildWeapon(d,weapon,offhand,mats,rune);
@@ -1038,7 +1077,7 @@ function buildRig(d){
   const torn=new T.Group();torn.visible=false;root.add(torn);
   torn.scale.setScalar(s);
   const own=new Map();body.traverse(o=>{if(!o.isMesh||o===trail)return;const m=o.material;if(!own.has(m))own.set(m,m.clone());o.material=own.get(m)});const allM=[...own.values()];
-  if(TOY){const conv=new Map();body.traverse(o=>{if(!o.isMesh||o===trail)return;const m=o.material;if(!m.isMeshToonMaterial)return;if(!conv.has(m)){const met=METALS.has(m.color.getHexString());conv.set(m,new T.MeshStandardMaterial({color:m.color.clone(),roughness:met?.32:.85,metalness:met?.45:0,transparent:m.transparent,opacity:m.opacity,side:m.side}))}o.material=conv.get(m)});allM.length=0;body.traverse(o=>{if(o.isMesh&&o!==trail&&!allM.includes(o.material))allM.push(o.material)});head.scale.setScalar(1.22);hands.forEach(h=>h.scale.setScalar(1.22))}
+  if(TOY){const conv=new Map();body.traverse(o=>{if(!o.isMesh||o===trail)return;const m=o.material;if(!m.isMeshToonMaterial)return;if(!conv.has(m)){const met=METALS.has(m.color.getHexString());conv.set(m,new T.MeshStandardMaterial({color:m.color.clone(),roughness:met?.32:.85,metalness:met?.45:0,transparent:m.transparent,opacity:m.opacity,side:m.side}))}o.material=conv.get(m)});allM.length=0;body.traverse(o=>{if(o.isMesh&&o!==trail&&!allM.includes(o.material))allM.push(o.material)});if(!SC){head.scale.setScalar(1.22);hands.forEach(h=>h.scale.setScalar(1.22))}}
   if(d.id==='aurel')allM.forEach(m=>{if(m.color&&m.color.getHexString()==='f4efe6')m.userData.pearl=true});
   const ice=new T.Mesh(box(1,2,1),new T.MeshToonMaterial({color:'#c9f6ff',gradientMap:grad,transparent:true,opacity:.6}));ice.position.y=1;ice.scale.setScalar(s);ice.visible=false;root.add(ice);
   const dome=new T.Mesh(d.id==='echo'?geo('dia',()=>new T.IcosahedronGeometry(2.4,1)):sph(2.4,24,16),new T.MeshBasicMaterial({color:el.c,transparent:true,opacity:.18,depthWrite:false,side:T.DoubleSide}));dome.position.y=1;dome.visible=false;root.add(dome);if(d.id==='echo')dome.add(new T.Mesh(geo('dia',()=>new T.IcosahedronGeometry(2.4,1)),new T.MeshBasicMaterial({color:'#ffe2c0',wireframe:true,transparent:true,opacity:.55})));
@@ -1057,7 +1096,7 @@ function applyRim(ms,col,sz){const U={uRimC:{value:new T.Color(col).lerp(new T.C
     m.customProgramCacheKey=()=>'rimAO'+(m.isMeshToonMaterial?'t':'s');m.needsUpdate=true});return U}
 function buildHead(d,h,m,rune){
   switch(d.head){
-    case 'crest':add(h,sph(.08,8,6),m.dark,0,.2,-.04);[-.08,0,.08].forEach((z,i)=>add(h,cone(.06,.32-i*.05,6),M(EL.fire.c),0,.26,z-.04,-.4+i*.3));add(h,box(.44,.05,.05),m.acc,0,.07,0);break;
+    case 'crest':add(h,sph(.08,8,6),m.dark,0,.2,-.04);[-.08,0,.08].forEach((z,i)=>add(h,SCULPT?lockGeo(.06,.34-i*.05,.45):cone(.06,.32-i*.05,6),M(EL.fire.c),0,.26,z-.04,-.4+i*.3));add(h,box(.44,.05,.05),m.acc,0,.07,0);break;
     case 'hood':{const hd=add(h,sph(.25,14,10),m.main,0,.03,-.04);hd.scale.set(1,1,1.05);add(h,box(.3,.14,.06),m.porc,0,-.01,.2);[-1,1].forEach(q=>add(h,cone(.025,.32,5),M('#ffe37a'),q*.12,.3,-.04,0,0,-q*.35));break}
     case 'bald':add(h,box(.42,.04,.04),rune,0,.1,.13).castShadow=false;add(h,box(.04,.14,.04),rune,0,.18,.11).castShadow=false;break;
     case 'crown':[-2,-1,0,1,2].forEach(i=>add(h,cone(.04,.2+(2-Math.abs(i))*.07,5),M('#e9fbff'),i*.07,.24,-.02+Math.abs(i)*-.02));add(h,tor(.2,.025,6,18),M('#bdefff'),0,.12,0,Math.PI/2);break;
@@ -1856,7 +1895,7 @@ function visRig(allM){allM.forEach(m=>{if(!m||!m.color)return;const hex=m.color.
   if(VIS.on){if(m.isMeshStandardMaterial&&met){m.metalness=.85;m.roughness=.25;m.roughnessMap=BRUSHED;m.envMapIntensity=1.1}}
   else{const o=m.userData.v0;m.bumpMap=o.bump;if(m.isMeshStandardMaterial){m.metalness=o.met;m.roughness=o.rough;m.roughnessMap=o.rmap}}
   m.needsUpdate=true})}
-function visSetMode(on){VIS.on=on;store.set('ac-vis',on);visApplyMap();for(const f of fighters)if(f&&f.rig)visRig(f.rig.all);if(showcase&&showcase.rig)visRig(showcase.rig.all);visLabel()}
+function visSetMode(on){VIS.on=on;store.set('ac-vis',on);visApplyMap();if(mode!=='fight'){portraits={};try{makePortraits()}catch(e){}if(showcase){const id=showcase.def.id;removeFighter(showcase);showcase=null;setShowcase(id)}}else tick('<small>Graphics</small>NEW MODELS FROM NEXT MATCH','#ffffff','c',2);for(const f of fighters)if(f&&f.rig)visRig(f.rig.all);if(showcase&&showcase.rig)visRig(showcase.rig.all);visLabel()}
 function visLabel(){const t='Graphics: '+(VIS.on?'Enhanced':'Classic');['b-vis','p-vis'].forEach(id=>{const b=$(id);if(b)b.textContent=t})}
 /* per frame */
 function visFrame(dt){VIS.t+=dt;const t=VIS.t;
@@ -3414,7 +3453,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=77;
+const NET_VER=78;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
