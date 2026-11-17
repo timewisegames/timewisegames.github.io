@@ -1528,14 +1528,19 @@ function vortexUpdate(f,dt,inp){
 }
 // Fire melts ice: a frozen fire ninja can still hold R to melt out into a slow-starting cyclone
 function meltOut(f,dt,inp){if(!(f.status.frozen>0)||f.hp<=0||f.def.el!=='fire'||!f.def.vortex){f.meltT=0;return}
-  if(netGuest()&&f!==P)return;
-  if(f.meltT>0){f.meltT-=dt;f.status.frozen=Math.max(f.status.frozen,.15);
-    if(Math.random()<.6*FR)emit(chest(f).add(V(rand(-.4,.4),rand(-.6,.6),rand(-.4,.4))),Math.random()<.5?'#eef2f5':'#ffb347',1,1.5,-.6,1.3);
-    if(Math.random()<.2*FR)emit(V(f.pos.x+rand(-.5,.5),.15,f.pos.z+rand(-.5,.5)),'#7fc4ff',2,1.2,1);
+  if(netGuest()&&f!==P){if(f.meltT>0){f.meltT-=dt;meltFx(f)}return}
+  if(f.meltT>0){f.meltT-=dt;f.status.frozen=Math.max(f.status.frozen,.15);meltFx(f);
     if(f.meltT<=0){f.meltT=0;meltVortex(f);if(netHost()&&(f===P||f===E))netEv('sk',netWho(f),'vm');if(netGuest()&&f===P){P._skAt=performance.now();(P._pred||(P._pred={})).vm=P._skAt}}return}
   const ai=!f.isP&&!(NET.live&&f===E)&&!(match&&match.mode==='versus');
-  if((inp.rHeld||inp.ult||(ai&&f.status.frozen>.5))&&f.en>=40){f.meltT=.6;float(f,'MELTING OUT','#ffb347');emit(chest(f),'#ffb347',14,3,-.3);snd('fire')}}
-function meltVortex(f){f.meltT=0;f.status.frozen=0;f.status.chill=0;f.freezeImm=clock+3;fxFlash(chest(f),'#ffd27a',2.4,.3);emit(chest(f),'#cff8ff',20,5,.6);float(f,'MELTED OUT','#ffb347');snd('ice');f.st='free';f.en=Math.max(f.en,40);if(startVortex(f))f.vRamp=true}
+  if((inp.rHeld||inp.ult||(ai&&f.status.frozen>.5))&&f.en>=40){f.meltT=.6;float(f,'MELTING OUT','#ffb347');emit(chest(f),'#ffb347',14,3,-.3);snd('fire');
+    if(netHost()&&(f===P||f===E))netEv('sk',netWho(f),'mlt');if(netGuest()&&f===P)(P._pred||(P._pred={})).mlt=performance.now()}}
+// the cinematic: body glows red-hot inside the ice, which melts from the top down, dripping and splashing
+function meltFx(f){const s0=f.size||1,k=Math.max(.04,f.meltT/.6),top=2*s0*k,R=.5*s0,p=f.pos;
+  for(let i=0;i<2;i++)if(Math.random()<.8*FR){const y=rand(.2,1.9)*s0;emit(V(p.x+rand(-.3,.3),y,p.z+rand(-.3,.3)),Math.random()<.5?'#ff5a1a':'#ffb347',1,1.2,-.9,1.1)}
+  if(Math.random()<.7*FR)emit(V(p.x+rand(-R,R),top,p.z+rand(-R,R)),'#eef2f5',1,.9,-.7,1.6);
+  for(let i=0;i<2;i++)if(Math.random()<.7*FR){const a=rand(0,TAU),ex=Math.cos(a)*R*1.02,ez=Math.sin(a)*R*1.02;emit(V(p.x+ex,top-.05,p.z+ez),'#7fc4ff',1,.4,2.2,.8)}
+  if(Math.random()<.5*FR){const a=rand(0,TAU),q=V(p.x+Math.cos(a)*R*1.15,.06,p.z+Math.sin(a)*R*1.15);emit(q,'#9fd6ff',3,2.2,1.6,.7);if(Math.random()<.2)fxRing(q,'#7fc4ff',.1,.45,.3,.04)}}
+function meltVortex(f){f.meltT=0;f.status.frozen=0;f.status.chill=0;f.freezeImm=clock+3;fxFlash(chest(f),'#ffd27a',2.4,.3);emit(chest(f),'#cff8ff',20,5,.6);emit(V(f.pos.x,.15,f.pos.z),'#7fc4ff',26,5,1.8,1.1);fxRing(f.pos,'#7fc4ff',.4,2.2,.4,.04);fxRing(f.pos,'#cfeaff',.2,1.4,.3,.05);float(f,'MELTED OUT','#ffb347');snd('ice');f.st='free';f.en=Math.max(f.en,40);if(startVortex(f))f.vRamp=true}
 function endVortex(f,cancel){
   if(f.st!=='vortex')return;f.st='free';f.vRamp=false;f.en=Math.max(0,f.en);f.rig.torn.visible=false;f.spinDown=.5;
   const mEl=f.mirrorEl;if(!(f.mirrorT>0))f.mirrorEl=null;if(cancel)return;const o=f.foe,el=mEl||f.def.el;
@@ -2776,6 +2781,7 @@ const REACH={
   aurel:{n:'Light Lance',d:'Your heavy attack (K) thrusts a spear of light 6 metres ahead.',len:6,w:.8,kind:'lance',col:'#fff2a8',dmg:12,kb:9,up:2}
 };
 const _ckQ1=new T.Quaternion(),_ckQ2=new T.Quaternion(),_ckUp=new T.Vector3(0,1,0);
+const _HOT=new T.Color('#ffb347');
 function chuckAnim(f,r,st,dt,t){const C=r.weapon.userData.chuck,piv=C.piv;dt=Math.min(dt||0,.05);
   if(f.chuckOut>0){f.chuckOut-=dt;piv.visible=false;return}piv.visible=true;
   const fw=fwd(f),busy=st==='atk'||st==='heavy';let target,L=.34;
@@ -3093,7 +3099,7 @@ function charFx(f,r,dt,st){const id=f.def.id;if(f.hp<=0)return;if(r.relic&&Math.
 function animate(f,dt){
   const r=f.rig,st=f.st,t=(f.anim+=dt);
   {const pv=f.prevYaw===undefined?f.yaw:f.prevYaw;const yr=((f.yaw-pv+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;f.turnR=lerp(f.turnR||0,yr/Math.max(dt,1e-3),damp(.2,dt));f.prevYaw=f.yaw}
-  if(f.status.frozen>0){r.ice.visible=true;r.ice.scale.setScalar((f.size||1)*(f.meltT>0?.72+.28*(f.meltT/.6):1));r.root.position.copy(f.pos);f._vp=null;return}r.ice.visible=false;
+  if(f.status.frozen>0){r.ice.visible=true;{const s0=f.size||1;if(f.meltT>0){const k=Math.max(.04,f.meltT/.6),h=1-k,pl=.5+.5*Math.sin(clock*30);r.ice.scale.set(s0*(.93+.07*k),s0*k,s0*(.93+.07*k));r.ice.position.y=1-s0+s0*k;const ec=(r._heat||(r._heat=new T.Color())).set('#ff2a00').lerp(_HOT,.3*pl).multiplyScalar(.45+.6*h+.2*pl);r.all.forEach(m=>{if(m.emissive)m.emissive.copy(ec)});r._fl='heat'}else{r.ice.scale.setScalar(s0);r.ice.position.y=1}}r.root.position.copy(f.pos);f._vp=null;return}r.ice.visible=false;
   const fast=st==='atk'||st==='heavy'||(st==='cast'&&(f.castPose==='clap'||f.castPose==='slam'));
   const k=fast?Math.min(1,dt*34):1-Math.exp(-dt*((f.jumpSq>0||f.landT>.12)?30:14));
   const L=(o,p,v)=>{o.rotation[p]+=(v-o.rotation[p])*k};
@@ -3581,7 +3587,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=86;
+const NET_VER=87;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
@@ -3700,6 +3706,7 @@ function netReplayHit(w,amt,o,sw){const tgt=netF(w),src=sw?netF(sw):null;if(!tgt
 function netSkill(f,k){if(!f||f.hp<=0)return;if(['atk','heavy','dash','block','cast','hurt'].includes(f.st))f.st='free';
   if(k==='v'){f.en=Math.max(f.en,40);if(f.st!=='vortex')startVortex(f);return}
   if(k==='vm'){if(f.st!=='vortex')meltVortex(f);return}
+  if(k==='mlt'){if(f.status.frozen>0&&!(f.meltT>0))f.meltT=.6;return}
   const s=f.kit[k];if(!s)return;f.cd[k]=0;f.en=Math.max(f.en,s.cost||0);useSkill(f,k)}
 function netVents(kind,ps){const V0=VENT[kind];for(const q of ps){const p=V(q[0],0,q[1]);const ring=new T.Mesh(geo('ring',()=>new T.RingGeometry(.86,1,48)),addMat(V0.col,.9));ring.rotation.x=-Math.PI/2;ring.position.set(p.x,.05,p.z);ring.scale.setScalar(1.4);world.add(ring);vents.push({p,kind,g:ring,t:0,state:'warn',tick:0})}tick(V0.name[0],V0.name[1],'c',2.4)}
 function netApplyEvents(list){for(const e of list){if(e[0]<=NET.evSeen)continue;NET.evSeen=e[0];const t=e[1];
