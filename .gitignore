@@ -1,0 +1,7 @@
+# built by build.py (GitHub builds its own copy on every push)
+site/
+aether-crucible-web.zip
+.DS_Store
+# older prototypes, kept locally only
+shadow-dojo.html
+shadow-dojo-3d.html
