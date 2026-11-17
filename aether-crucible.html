@@ -1479,6 +1479,9 @@ function perfectParry(tgt,src,o,dir){
 function cast(f,d){f.st='cast';f.t=0;f.castDur=d;f.castPose=null}
 function special(f,spec){f.st='special';f.special=Object.assign({t:0},spec);if(spec.start)spec.start(f,f.special)}
 function aim(f){const t=f.foe;if(!t)return fwd(f);if(f.isP&&t.invis)return fwd(f);if(!f.isP&&t.invis){const d=fwd(f);d.applyAxisAngle(V(0,1,0),rand(-.5,.5));return d}return dirTo(f.pos,t.pos)}
+function hiddenTgt(o){return !!(o&&(o.invis||o.veil>0||o.dpInv>0||o.inSmoke))}
+// lightning only seeks foes it can see and that are near enough
+function stormLock(f,o,range){return !!(o&&o.hp>0&&!hiddenTgt(o)&&hdist(f.pos,o.pos)<=range)}
 function strike(src,pos,delay,dmg){const p=V(pos.x,0,pos.z);fxRing(p,'#9fd4ff',1.4,1.2,delay+.05);later(delay,()=>{fxBolt(V(p.x+rand(-1,1),14,p.z+rand(-1,1)),V(p.x,.1,p.z),'#bfe4ff',.25);fxColumn(p,'#cfe9ff',8,.35,.2);fxFlash(V(p.x,.5,p.z),'#9fd4ff',1.6,.25);snd('zap');aoe(src,p,1.4,dmg,{el:'storm',kb:3,up:4});
   for(const h of hazardsAt(p))if(h.type==='water'){fxRing(h.pos,'#9fd4ff',.3,h.r,.3);for(const t of fighters)if((!src||t.team!==src.team)&&t.hp>0&&hdist(t.pos,h.pos)<h.r&&t.grounded&&hdist(t.pos,p)>1.4+t.rad)damage(src,t,dmg*.5,{el:'storm',kb:1,up:2,chain:true})}})}
 function telegraph(pos,col,r,dur){fxRing(V(pos.x,0,pos.z),col,r,r*.9,dur)}
@@ -1509,7 +1512,7 @@ function vortexUpdate(f,dt,inp){
   if(f.vp<=0){
     if(el==='fire'){f.vp=.22;addHazard('fire',f.pos,.9,4,f)}
     else if(el==='ice'){f.vp=.28;addHazard('ice',f.pos,1,6,f);for(const h of hazards)if((h.type==='water'||h.type==='fire')&&hdist(h.pos,f.pos)<3.2){const p=h.pos.clone(),r=h.r;killHz(h);if(h.type==='water')addHazard('ice',p,r,6,f)}}
-    else if(el==='storm'){f.vp=.35;addHazard('shock',f.pos,1.1,5,f);f.vs=(f.vs||0)-1;if(f.vs<=0){f.vs=2;if(o.hp>0)strike(f,o.pos.clone().add(V(rand(-.6,.6),0,rand(-.6,.6))),.4,8)}}
+    else if(el==='storm'){f.vp=.35;addHazard('shock',f.pos,1.1,5,f);f.vs=(f.vs||0)-1;if(f.vs<=0){f.vs=2;if(stormLock(f,o,7))strike(f,o.pos.clone().add(V(rand(-.8,.8),0,rand(-.8,.8))),.55,6)}}
     else if(el==='earth'){f.vp=.6;const a=rand(0,7);dustBurst(V(f.pos.x+Math.cos(a)*1.6,0,f.pos.z+Math.sin(a)*1.6),.35,'#a07850');spawnDebris(V(f.pos.x+Math.cos(a)*1.4,1.2,f.pos.z+Math.sin(a)*1.4),V(Math.cos(a)*9,6,Math.sin(a)*9));const db=debris[debris.length-1];if(db){db.state='fly';db.owner=f;db.m.material=M('#8a6a4a')}emit(V(f.pos.x,.3,f.pos.z),'#c8a878',6,3,.3)}
     else if(el==='wind'){f.vp=.4;addHazard('gust',f.pos,1.3,5,f)}
     else f.vp=1;
@@ -1521,7 +1524,7 @@ function endVortex(f,cancel){
   if(f.st!=='vortex')return;f.st='free';f.en=Math.max(0,f.en);f.rig.torn.visible=false;f.spinDown=.5;
   const mEl=f.mirrorEl;if(!(f.mirrorT>0))f.mirrorEl=null;if(cancel)return;const o=f.foe,el=mEl||f.def.el;
   if(el==='fire'){if(hdist(f.pos,o.pos)<3){damage(f,o,8,{el:'fire',kb:2,up:16,heavy:true});float(o,'LAUNCHED','#ffd27a')}fxColumn(f.pos,'#ff8a3d',6,1.2,.35)}
-  if(el==='storm'){if(o.hp>0)strike(f,o.pos,.15,12)}
+  if(el==='storm'){if(stormLock(f,o,7))strike(f,o.pos,.3,9)}
   if(el==='ice'){aoe(f,f.pos,3,6,{kb:4,up:2,noStun:true});for(const t of foesOf(f))if(hdist(t.pos,f.pos)<3.2&&!(t.status.frozen>0)){setStatus(t,'chill',2);t.chillAt=clock};fxRing(f.pos,'#cff8ff',.5,3.4,.4)}
   if(el==='wind'){for(const t of foesOf(f))if(hdist(t.pos,f.pos)<4.5)damage(f,t,8,{dir:dirTo(f.pos,t.pos),kb:18,up:6,heavy:true});fxRing(f.pos,'#9ff0c8',.5,5,.45);emit(V(f.pos.x,1,f.pos.z),'#effff6',30,7,-.2)}
   if(el==='earth'){aoe(f,f.pos,4.5,9,{kb:12,up:5,heavy:true,breaks:5});fxRing(f.pos,'#d08b3c',.5,4,.45);shakeIt(.35)}
@@ -2340,7 +2343,7 @@ KITS.tempest={
   e:{n:'Static Tether',d:'Throw a chain-sickle. If it hooks your foe it shocks them and yanks you straight to them.',cd:7,ai:[3.5,12],run(f){cast(f,.2);const d=aim(f);
     proj({owner:f,el:'storm',pos:chest(f).addScaledVector(d,.7),dir:d,speed:26,r:.32,dmg:6,kb:0,up:0,life:.6,kind:'shard',tick(p){fxBolt(chest(f),p.pos.clone(),'#9fd4ff',.05)},onHit(p,t){setStatus(t,'shock',.7);
       special(f,{dur:.45,kin:true,pose:'rush',iframes:true,update(f,dt,s){const d=dirTo(f.pos,t.pos),dist=hdist(f.pos,t.pos);if(dist>1.4){const step=Math.min(dist-1.3,30*dt);f.pos.addScaledVector(d,step);f.yaw=Math.atan2(d.x,d.z)}else s.t=s.dur;fxGhost(f,'#6fb6ff')},end(f){f.vel.set(0,0,0)}})}});snd('zap')}},
-  r:{n:'Thunderhead Vortex',d:'Hold R. Become a storm cyclone that leaves electrified puddles behind you and calls lightning down on your foe. Lightning arcs through puddles.',vortex:true},
+  r:{n:'Thunderhead Vortex',d:'Hold R. Become a storm cyclone that leaves electrified puddles behind you and calls lightning down on a foe within 7 metres. Lightning cannot find foes who are invisible or hidden in smoke, and it arcs through puddles.',vortex:true},
   update(f,dt){if(Math.hypot(f.vel.x,f.vel.z)>1.5&&f.grounded)f.charge=Math.min(100,f.charge+dt*28)},
   onDealHit(f,t,o){if(f.charge>=100&&!o.blocked&&!o.dot){setStatus(t,'shock',1.1);f.charge=0;float(t,'STATIC!','#9fd4ff');fxBolt(chest(f),chest(t),'#cfe9ff')}}
 };
@@ -2771,7 +2774,7 @@ function reachStrike(f){const R=REACH[f.def.id],d=fwd(f),o=chest(f);
   snd(R.kind==='pulse'?'zap':'swing')}
 const Z4={
   cinder:{n:'Flame Step',d:'Instantly reach max Heat and burst forward through your foe, leaving a trail of fire.',cd:8,ai:[2,9],run(f){const d=aim(f);f.heat=5;f.heatT=4;snd('fire');special(f,{dur:.28,kin:true,pose:'rush',iframes:true,update(f,dt,s){f.pos.addScaledVector(d,24*dt);clampPlat(f.pos,PLAT_R-.5);f.yaw=Math.atan2(d.x,d.z);s.p=(s.p||0)-dt;if(s.p<=0){s.p=.05;addHazard('fire',f.pos,.8,3.5,f)}for(const t of foesOf(f))if(!s.h&&hdist(t.pos,f.pos)<1.4+t.rad){s.h=1;damage(f,t,9,{el:'fire',dir:d,kb:6,up:3})}},end(f){f.vel.set(d.x*5,0,d.z*5)}})}},
-  tempest:{n:'Storm Call',d:'Call three lightning strikes down onto your foe in quick succession.',cd:9,ai:[0,22],run(f){cast(f,.35);for(let i=0;i<3;i++)later(i*.35,()=>{const o=f.foe;if(o&&o.hp>0)strike(f,o.pos.clone(),.45,9)});snd('zap')}},
+  tempest:{n:'Storm Call',d:'Call three lightning strikes down onto your foe in quick succession, up to 14 metres away. Lightning cannot find foes who are invisible or hidden in smoke: it strikes blindly around them.',cd:10,ai:[0,14],run(f){const o0=f.foe;if(!o0||o0.hp<=0||hdist(f.pos,o0.pos)>14)return false;cast(f,.35);for(let i=0;i<3;i++)later(i*.35,()=>{const o=f.foe;if(!o||o.hp<=0)return;const seen=!hiddenTgt(o)&&hdist(f.pos,o.pos)<=16;const a=rand(0,TAU),off=seen?0:rand(2.2,4);strike(f,o.pos.clone().add(V(Math.cos(a)*off,0,Math.sin(a)*off)),.5,8)});snd('zap')}},
   basalt:{n:'Stone Skin',d:'Instantly grow all 5 crystal plates and keep them for 6 seconds.',cd:12,ai:[0,8],run(f){f.armor=5;f.armorT=6;emit(chest(f),'#d08b3c',24,4);fxRing(f.pos,'#ffd9a0',.4,2.2,.4);float(f,'STONE SKIN','#ffd9a0');snd('boom')}},
   rime:{n:'Ice Prison',d:'Raise a frost cage under your foe after a short warning. If they are still inside, they freeze for 1.5 seconds.',cd:10,ai:[0,16],run(f){cast(f,.3);const p=f.foe.pos.clone();p.y=0;telegraph(p,'#bff4ff',1.6,.55);later(.55,()=>{addHazard('ice',p,1.8,6,f);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;fxSpike(V(p.x+Math.cos(a)*1.4,0,p.z+Math.sin(a)*1.4),'#bff4ff')}for(const t of foesOf(f))if(hdist(t.pos,p)<1.7){damage(f,t,6,{kb:0,up:0});freeze(t,1.5)}snd('ice')})}},
   tide:{n:'Healing Rain',d:'Summon a rain cloud over this spot for 5 seconds. While you stand under it you heal steadily, and the ground beneath floods.',cd:11,ai:[0,30],run(f){spawnRain(f,f.pos,3.4,5);addHazard('water',f.pos,3.2,6,f);float(f,'HEALING RAIN','#8ff0ff');snd('water')}},
@@ -3545,7 +3548,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=80;
+const NET_VER=81;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
