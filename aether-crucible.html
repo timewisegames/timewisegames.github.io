@@ -569,7 +569,7 @@ const SPEAKER_OFF='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z" fill="
 /* Fighter definitions. look = how the doll is built */
 const ROSTER=[
   {id:'cinder',name:'Cinder',title:'The Flame Dancer',el:'fire',vortex:true,hp:94,spd:6.4,pow:0.9,range:2.5,stats:[78,72,50,82],body:'#a8322a',accent:'#ffb347',head:'crest',weapon:'whip',bio:'A festival dancer whose twin golden blades leave the floor burning.'},
-  {id:'tempest',name:'Tempest',title:'The Storm Lasher',el:'storm',vortex:true,hp:90,spd:6.6,pow:0.87,range:2.8,stats:[70,80,45,95],body:'#2c4f9e',accent:'#9fd0ff',head:'hood',weapon:'bow',bio:'A sky-temple fighter with a crackling lightning whip. Her lightning jumps through water and metal.'},
+  {id:'tempest',name:'Tempest',title:'The Storm Lasher',el:'storm',vortex:true,hp:90,spd:6.6,pow:0.87,range:2.8,stats:[70,80,45,95],body:'#2c4f9e',accent:'#9fd0ff',head:'hood',weapon:'bow',bio:'A sky-temple fighter with a crackling lightning nunchuck whose chain stretches out to strike from afar. Her lightning jumps through water and metal.'},
   {id:'basalt',name:'Basalt',title:'The Living Mountain',el:'earth',vortex:true,hp:125,spd:5.2,pow:1.2,range:1.9,size:1.14,stats:[95,45,95,50],body:'#6e7378',accent:'#ffb85a',head:'bald',weapon:'gauntlets',bio:'A stone monk who raises walls and then punches them across the arena.'},
   {id:'rime',name:'Rime',title:'The Frost Skater',el:'ice',vortex:true,hp:108,spd:6.2,pow:1.08,range:2.5,stats:[72,78,62,75],body:'#3b7fa8',accent:'#e9fbff',head:'crown',weapon:'staff',bio:'Fights with twin frost fans, lays ice lanes and glides along them. Chilled foes freeze solid.'},
   {id:'locust',name:'Locust',title:'The Jade Gale',el:'wind',vortex:true,hp:104,spd:6.5,pow:1,range:2.5,stats:[72,88,55,82],body:'#2f8a5e',accent:'#d8e8e0',head:'hood',weapon:'warfan',bio:'A wandering wind ninja who swings a two-handed golden nodachi. Lifts foes on updrafts and flings them across the arena with his cyclone.'},
@@ -1120,7 +1120,13 @@ function buildWeapon(d,w,o,m,rune){
   const el=EL[d.el];
   if(d.vortex){const gold=M('#f2c14e'),edge=B(el.c);
     if(d.id==='cinder'){[w,o].forEach((g,i)=>{const h=new T.Group();h.rotation.x=i?Math.PI/2:0;g.add(h);add(h,cyl(.026,.026,.2,8),m.black,0,-.02,0);add(h,box(.12,.025,.06),gold,0,.09,0);add(h,box(.05,.42,.014),gold,.01,.32,0,0,0,-.08);add(h,box(.06,.3,.014),gold,.035,.6,0,0,0,-.3);add(h,box(.012,.6,.016),edge,.045,.42,0,0,0,-.15).castShadow=false;add(h,cone(.03,.12,4),gold,.085,.78,0,0,0,-.5)})}
-    else if(d.id==='tempest'){add(w,cyl(.035,.03,.34,8),gold,0,0,0);add(w,tor(.035,.01,4,8),gold,0,.16,0,Math.PI/2);let y=.2;for(let i=0;i<9;i++){add(w,cyl(.02-i*.0013,.022-i*.0013,.16,6),i%2?edge:gold,Math.sin(i*.7)*.04,y+.08,0,0,0,Math.sin(i*.7)*.15).castShadow=false;y+=.15}add(w,sph(.05,8,6),edge,0,y+.05,0).castShadow=false}
+    else if(d.id==='tempest'){const navy=M('#1d2f66'),glow=B('#cfe9ff');
+      add(w,cyl(.042,.04,.42,10),navy,0,.08,0);for(const y of [-.1,.08,.26])add(w,tor(.044,.01,4,10),gold,0,y,0,Math.PI/2);add(w,cyl(.046,.046,.05,10),edge,0,.17,0).castShadow=false;add(w,sph(.03,8,6),gold,0,.3,0);
+      const piv=new T.Group();piv.position.y=.31;w.add(piv);const chain=new T.Group();piv.add(chain);
+      for(let i=0;i<5;i++)add(chain,tor(.022,.007,4,8),glow,0,.03+i*.06,0,0,i%2?Math.PI/2:0).castShadow=false;
+      const core=new T.Mesh(cyl(.009,.009,.34,4),new T.MeshBasicMaterial({color:'#9fd4ff',transparent:true,opacity:.85,blending:T.AdditiveBlending,depthWrite:false}));core.position.y=.17;chain.add(core);
+      const hb=new T.Group();hb.position.y=.34;piv.add(hb);add(hb,sph(.03,8,6),gold,0,0,0);add(hb,cyl(.042,.04,.42,10),navy,0,.22,0);for(const y of [.06,.22,.38])add(hb,tor(.044,.01,4,10),gold,0,y,0,Math.PI/2);add(hb,cyl(.046,.046,.05,10),edge,0,.13,0).castShadow=false;add(hb,cone(.03,.08,6),glow,0,.46,0).castShadow=false;
+      w.userData.chuck={piv,chain,hb}}
     else if(d.id==='basalt'){add(w,cyl(.035,.04,1.15,8),m.wood,0,.35,0);add(w,box(.52,.3,.3),gold,0,.95,0);add(w,box(.32,.33,.33),M('#6a5a4a'),0,.95,0);add(w,box(.54,.04,.32),edge,0,1.02,0).castShadow=false;add(w,cone(.06,.14,4),gold,0,1.16,0)}
     else if(d.id==='locust'){add(w,cyl(.032,.032,.52,8),m.black,0,-.1,0);for(let i=0;i<4;i++)add(w,tor(.034,.008,4,8),gold,0,-.3+i*.12,0,Math.PI/2);add(w,cyl(.1,.1,.03,14),gold,0,.18,0);add(w,box(.055,1.5,.016),gold,0,.95,0);add(w,box(.014,1.48,.018),edge,.026,.94,0).castShadow=false;add(w,cone(.028,.16,4),gold,0,1.78,0,0,Math.PI/4)}
     else{[w,o].forEach((g,i)=>{const h=new T.Group();h.rotation.x=i?Math.PI/2:0;g.add(h);add(h,cyl(.025,.025,.18,6),gold,0,0,0);const pm=new T.MeshToonMaterial({color:'#cff6ff',gradientMap:grad,transparent:true,opacity:.78,side:T.DoubleSide});const pan=new T.Mesh(geo('fanp',()=>new T.CircleGeometry(.5,18,Math.PI*.1,Math.PI*.8)),pm);pan.position.y=.08;h.add(pan);for(let k=0;k<7;k++){const a=Math.PI*.1+k/6*Math.PI*.8;add(h,box(.012,.5,.012),gold,Math.cos(a)*.25,.08+Math.sin(a)*.25,0,0,0,a-Math.PI/2)}add(h,tor(.5,.014,4,18,Math.PI*.8),edge,0,.08,0,0,0,Math.PI*.1).castShadow=false})}
@@ -2756,14 +2762,29 @@ const REACH={
   murk:{n:'Censer Chain',d:'Your heavy attack (K) whips your censer out on its chain, reaching 5.5 metres.',len:5.5,w:.8,kind:'chain',col:'#8a8f9a',dmg:14,kb:8,up:2},
   locust:{n:'Gale Cut',d:'Your heavy attack (K) sweeps your great sword in a cutting gust that blasts foes up to 6 metres away.',len:6,w:1.4,kind:'pulse',col:'#9ff0c8',dmg:11,kb:13,up:3},
   rime:{n:'Frost Gust',d:'Your heavy attack (K) snaps both fans forward in a freezing gust that hits foes up to 5.5 metres away and chills them.',len:5.5,w:1.5,kind:'pulse',col:'#bff4ff',chill:true,dmg:11,kb:10,up:2},
-  tempest:{n:'Thunder Lash',d:'Your heavy attack (K) cracks your lightning whip out to 6 metres, shocking whoever it hits.',len:6,w:.8,kind:'whip',col:'#9fd4ff',el:'storm',dmg:11,kb:7,up:2},
+  tempest:{n:'Thunder Chuck',d:'Your heavy attack (K) flings the far end of your lightning nunchuck out on a stretching chain of lightning, reaching 6 metres and shocking whoever it hits.',len:6,w:.8,kind:'chuck',col:'#9fd4ff',el:'storm',dmg:11,kb:7,up:2},
   aurel:{n:'Light Lance',d:'Your heavy attack (K) thrusts a spear of light 6 metres ahead.',len:6,w:.8,kind:'lance',col:'#fff2a8',dmg:12,kb:9,up:2}
 };
+const _ckQ1=new T.Quaternion(),_ckQ2=new T.Quaternion(),_ckUp=new T.Vector3(0,1,0);
+function chuckAnim(f,r,st,dt,t){const C=r.weapon.userData.chuck,piv=C.piv;dt=Math.min(dt||0,.05);
+  if(f.chuckOut>0){f.chuckOut-=dt;piv.visible=false;return}piv.visible=true;
+  const fw=fwd(f),busy=st==='atk'||st==='heavy';let target,L=.34;
+  if(busy){f._ckA=(f._ckA||0)+dt*(st==='heavy'?26:19);const c=Math.cos(f._ckA);target=fw.clone().multiplyScalar(c).addScaledVector(_ckUp,Math.sin(f._ckA)).normalize();L=.34+.5*Math.max(0,c);
+    if(Math.random()<.35){const p=V();C.hb.getWorldPosition(p);emit(p,'#cfe9ff',1,1.2,0,.8)}}
+  else{f._ckA=0;const sd=V(fw.z,0,-fw.x);target=V(0,-1,0).addScaledVector(sd,(f.chuckSide||-.55)+Math.sin(t*1.7)*.12).addScaledVector(fw,.35+Math.cos(t*1.3)*.1).normalize()}
+  const cur=f._ckD||(f._ckD=target.clone());cur.lerp(target,Math.min(1,dt*(busy?30:7))).normalize();
+  piv.parent.getWorldQuaternion(_ckQ1).invert();_ckQ2.setFromUnitVectors(_ckUp,cur);piv.quaternion.copy(_ckQ1.multiply(_ckQ2));
+  const cl=C.chain.scale.y*.34;const nl=cl+(L-cl)*Math.min(1,dt*20);C.chain.scale.y=nl/.34;C.hb.position.y=nl}
 function reachStrike(f){const R=REACH[f.def.id],d=fwd(f),o=chest(f);
   for(const t of foesOf(f)){const v=chest(t).sub(o);const pr=v.dot(d);if(pr<0||pr>R.len+t.rad)continue;const perp=v.clone().addScaledVector(d,-pr);perp.y*=.6;if(perp.length()<R.w+t.rad){damage(f,t,R.dmg,{dir:d.clone(),kb:R.kb,up:R.up,heavy:true,melee:pr<2.5,el:R.el});if(R.chill&&!(t.status.frozen>0)){setStatus(t,'chill',2);t.chillAt=clock}}}
   for(const s of solids){if(s.dead)continue;const v=V(s.pos.x-f.pos.x,0,s.pos.z-f.pos.z);const pr=v.dot(d);if(pr>0&&pr<R.len&&v.clone().addScaledVector(d,-pr).length()<R.w+s.r)hitSolid(s,1)}
   const q=new T.Quaternion().setFromUnitVectors(V(0,1,0),d);
-  if(R.kind==='vine'||R.kind==='chain'||R.kind==='lance'||R.kind==='whip'){if(R.kind==='whip')for(let i=0;i<3;i++)later(i*.06,()=>fxBolt(o.clone(),o.clone().addScaledVector(d,R.len),'#cfe9ff',.15));const r=R.kind==='lance'?.09:R.kind==='whip'?.04:.07;const mat=(R.kind==='lance'||R.kind==='whip')?new T.MeshBasicMaterial({color:R.col,transparent:true,opacity:.95,blending:T.AdditiveBlending,depthWrite:false}):TM(R.col);
+  if(R.kind==='chuck'){f.chuckOut=.42;for(let i=0;i<3;i++)later(i*.07,()=>fxBolt(o.clone(),o.clone().addScaledVector(d,R.len*(.5+i*.25)),'#cfe9ff',.15));
+    const beam=new T.Mesh(cyl(1,1,1,6),new T.MeshBasicMaterial({color:R.col,transparent:true,opacity:.9,blending:T.AdditiveBlending,depthWrite:false}));beam.quaternion.copy(q);
+    const tip=new T.Group(),nv=M('#1d2f66'),gd=M('#f2c14e');add(tip,cyl(.05,.048,.46,10),nv,0,.23,0);for(const y of [.06,.23,.4])add(tip,tor(.052,.012,4,10),gd,0,y,0,Math.PI/2);add(tip,cone(.035,.1,6),B('#cfe9ff'),0,.5,0);tip.quaternion.copy(q);world.add(tip);
+    const links=[];for(let i=0;i<10;i++){const l=new T.Mesh(tor(.05,.014,4,8),B('#cfe9ff'));l.quaternion.copy(q);if(i%2)l.rotateY(Math.PI/2);world.add(l);links.push(l)}
+    fx(beam,.42,(mm,k)=>{const L=Math.max(.05,R.len*(k<.38?1-Math.pow(1-k/.38,2):1-(k-.38)/.62));mm.scale.set(.025,L,.025);mm.position.copy(o).addScaledVector(d,L/2);mm.material.opacity=.9*(k<.8?1:(1-k)/.2);tip.position.copy(o).addScaledVector(d,L);links.forEach((l,i)=>l.position.copy(o).addScaledVector(d,L*(i+.5)/10));if(Math.random()<.5)emit(tip.position.clone(),'#cfe9ff',2,2,0,.8);if(k>.97){world.remove(tip);links.forEach(l=>world.remove(l))}})}
+  else if(R.kind==='vine'||R.kind==='chain'||R.kind==='lance'||R.kind==='whip'){if(R.kind==='whip')for(let i=0;i<3;i++)later(i*.06,()=>fxBolt(o.clone(),o.clone().addScaledVector(d,R.len),'#cfe9ff',.15));const r=R.kind==='lance'?.09:R.kind==='whip'?.04:.07;const mat=(R.kind==='lance'||R.kind==='whip')?new T.MeshBasicMaterial({color:R.col,transparent:true,opacity:.95,blending:T.AdditiveBlending,depthWrite:false}):TM(R.col);
     const m=new T.Mesh(cyl(1,1,1,8),mat);m.quaternion.copy(q);const tip=new T.Mesh(R.kind==='vine'?cone(.18,.4,5):R.kind==='chain'?sph(.18,10,8):R.kind==='whip'?sph(.12,8,6):cone(.14,.5,6),R.kind==='chain'?TM('#6a5a3a'):mat);tip.quaternion.copy(q);world.add(tip);
     const extra=[];if(R.kind==='vine')for(let i=0;i<5;i++){const lf=new T.Mesh(cone(.07,.22,4),TM('#7fd65a'));lf.quaternion.copy(q);world.add(lf);extra.push([lf,(i+1)/6])}
     fx(m,.4,(mm,k)=>{const L=Math.max(.05,R.len*(k<.4?k/.4:1-(k-.4)/.6));mm.scale.set(r,L,r);mm.position.copy(o).addScaledVector(d,L/2);tip.position.copy(o).addScaledVector(d,L);extra.forEach(([lf,u])=>{lf.position.copy(o).addScaledVector(d,L*u).add(V(0,.08,0))});if(k>.97){world.remove(tip);extra.forEach(([lf])=>world.remove(lf))}})}
@@ -3167,6 +3188,7 @@ function animate(f,dt){
   L(r.torso,'x',tx);L(r.torso,'y',ty);r.head.rotation.x+=(headX-r.head.rotation.x)*k;L(r.torso,'z',tz);L(r.weapon,'x',wx);
   r.hips.position.y+=(hy-r.hips.position.y)*k;
   if(f.flipT>0){f.flipT-=dt;r.hips.rotation.x=(1-Math.max(0,f.flipT)/.42)*Math.PI*2}else r.hips.rotation.x=0;
+  if(r.weapon.userData.chuck)chuckAnim(f,r,st,dt,t);
   // scarf
   animCloth(f,r,dt,loc);const lift=clamp(Math.max(hs/7,(f.cl?f.cl.fl:0)*2.6),0,1);r.scarf.forEach((s,i)=>{s.rotation.x=lerp(.9,.15,lift)*(i?.18:1)+Math.sin(t*6+i*.8)*(.08+lift*.12);s.rotation.y=Math.sin(t*3.2+i)*.12});
   if(r.cape)r.cape.forEach((s,i)=>{s.rotation.x=lerp(.25,1.25,lift)*(i?.25:1)+Math.sin(t*5+i*.7)*(.06+lift*.15);s.rotation.z=Math.sin(t*3+i)*.05*(1+lift)});
@@ -3548,7 +3570,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=81;
+const NET_VER=82;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
