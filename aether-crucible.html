@@ -3460,15 +3460,7 @@ function dressSnake(f){const r=f.rig,g=new T.Group();g.scale.setScalar(1.7);r.ro
 function dressSerpent(f){const r=f.rig,C1=M('#2f5f58'),C2=M('#3f7a6e'),BAND=M('#d9894a'),BELLY=M('#e6c48a'),DK=M('#141812');
   r.legs.forEach(l=>l.visible=false);if(r.mats&&r.mats.skin)r.mats.skin.color.set('#3f7a6e');
   const tail=new T.Group();r.root.add(tail);const segs=[];for(let i=0;i<13;i++){const rad=lerp(.2,.05,i/12),m=new T.Mesh(sph(1,12,9),i%3===1?BAND:(i%2?C2:C1));m.scale.set(rad,rad*.9,rad*1.4);m.castShadow=true;tail.add(m);segs.push(m)}
-  // square, blocky scaled torso
-  r.torso.children.forEach(c=>{if(c.isMesh)c.visible=false});
-  const tb=add(r.torso,box(.66,.8,.4),C1,0,.44,0);tb.castShadow=true;add(r.torso,box(.4,.56,.03),BELLY,0,.4,.205);for(let i=0;i<4;i++)add(r.torso,box(.4,.03,.035),BAND,0,.22+i*.13,.21);
-  [-1,1].forEach(q=>{add(r.torso,box(.24,.12,.42),C2,q*.27,.83,0).castShadow=true;add(r.torso,box(.05,.05,.05),BAND,q*.3,.9,.12)});
-  add(r.torso,box(.24,.14,.24),C2,0,.9,0);add(r.torso,box(.7,.1,.42),BAND,0,.06,0).castShadow=true;add(r.torso,box(.14,.1,.04),M('#8a5a2a'),0,.06,.22);
-  // scaly clawed hands
-  r.hands.forEach((hd,hi)=>{hd.children.forEach(c=>{if(c.isMesh)c.visible=false});const q=hi?1:-1;
-    add(hd,box(.11,.1,.08),C2,0,-.04,0).castShadow=true;for(let k=0;k<3;k++){add(hd,box(.026,.07,.03),C2,-.034+k*.034,-.12,.01);add(hd,cone(.014,.05,4),M('#f4f0e0'),-.034+k*.034,-.17,.012,Math.PI,0,0)}
-    add(hd,box(.03,.06,.03),C2,-q*.06,-.06,.03,0,0,q*.4);add(hd,cone(.013,.04,4),M('#f4f0e0'),-q*.08,-.1,.03,Math.PI,0,q*.4)});
+  const belt=add(r.torso,cyl(.2,.22,.12,12),BAND,0,.08,0);belt.castShadow=true;
   r.head.children.forEach(c=>c.visible=false);const h=new T.Group();r.head.add(h);h.position.y=.02;
   const sk=add(h,sph(1,16,12),C2,0,.02,.08);sk.scale.set(.2,.15,.27);const sn=add(h,sph(1,12,8),C2,0,-.01,.28);sn.scale.set(.13,.09,.1);
   [-1,1].forEach(q=>{add(h,box(.1,.035,.13),C1,q*.1,.12,.1,0,0,-q*.3);add(h,sph(.048,10,8),M('#ffcf3a'),q*.13,.07,.16);add(h,box(.012,.06,.012),DK,q*.155,.07,.18);add(h,cone(.022,.12,5),M('#f6f2e2'),q*.06,-.08,.3,Math.PI,0,0);add(h,sph(.011,6,4),DK,q*.035,.02,.37)});
