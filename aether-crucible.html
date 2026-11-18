@@ -458,7 +458,7 @@ body{font-family:var(--ui);letter-spacing:.005em}
         <li><b>Training:</b> practise any fighter on three dummies. Energy stays full, there are no cooldowns, dummies heal themselves, and you can switch fighters from the pause menu.</li>
         <li><b>Story Mode:</b> every master has a five-stage campaign with dialogue: The Invitation, Trial of the Arena (the arena itself fights back), Swarm Ambush, Rival Showdown, and the Championship Finale against the Tournament Host, who fights with abilities stolen from the masters you beat. Win it to see that master's ending.</li>
         <li><b>Tag Team:</b> choose a primary fighter and a backup partner. Press <b>T</b> or <b>Tab</b> to swap. Your partner leaps in with an assist attack, and the tag has a 6-second cooldown. Your resting partner slowly heals. Knock out both enemies to win.</li>
-        <li><b>Wave Survival:</b> survive endless waves of guards: fast dagger scouts, shield-bearers whose shields only break to heavy attacks (K), and stalkers who turn invisible until they strike. A master boss arrives every third wave, and every second wave the Host calls an arena event: Low Gravity, Collapsing Floor, or Relic Scramble (hold the Jade Blade for 10 seconds to clear the wave). Defeated foes drop blue energy orbs and gold tokens to spend in the Dojo. You have 3 lives.</li>
+        <li><b>Wave Survival:</b> survive endless waves of guards: fast dagger scouts, shield-bearers whose shields only break to heavy attacks (K), and stalkers who turn invisible until they strike. A master boss arrives alone every fifth wave, and every second wave the Host calls an arena event: Low Gravity, Collapsing Floor, or Relic Scramble (hold the Jade Blade for 10 seconds to clear the wave). Defeated foes drop blue energy orbs and gold tokens to spend in the Dojo. You have 3 lives.</li>
       </ul>
       <h4 style="margin-top:14px">Elemental chemistry</h4><ul class="chem" id="chem"></ul></div>
     </div>
@@ -1233,6 +1233,7 @@ function damage(src,tgt,amt,o){
   amt*=mult;
   if(!o.dot&&tgt.shieldHp>0){const ab=Math.min(tgt.shieldHp,amt);tgt.shieldHp-=ab;amt-=ab;if(ab>0)float(tgt,'ABSORBED','#fff2a8');if(tgt.shieldHp<=0){tgt.shieldT=0;fxFlash(chest(tgt),'#fff2a8',1.2,.25)}}
   if(!o.dot&&!blocked&&tgt.def.id==='aurel'&&o.proj){amt*=.7;const c=chest(tgt);['#ff5a5a','#ffb35a','#ffe96a','#7fe07f','#6fb6ff','#b07bff'].forEach(col=>emit(c,col,3,5));float(tgt,'REFRACTED','#fff2a8');for(const t of foesOf(tgt))if(hdist(t.pos,tgt.pos)<3.5)setStatus(t,'blind',.6)}
+  if(tgt.def&&tgt.def.minion&&src&&src.def&&!src.def.minion&&(src.st==='vortex'||src.ultT>0))amt*=2.5; // wave grunts crumble to ultimates and tornadoes
   if(!(netGuest()&&(tgt===P||tgt===E)))tgt.hp=Math.max(0,tgt.hp-amt);if(src&&src!==tgt&&!o.dot)tgt.lastHitBy=src;
   if(tgt.veil>0&&!o.dot&&!blocked&&src!==tgt)veilBreak(tgt);
   if(relic&&relic.holder===tgt&&!o.dot&&!blocked&&amt>=3&&src)dropRelic(dirTo(src.pos,tgt.pos));
@@ -2898,6 +2899,7 @@ function updFighter(f,dt,inp){
   envFlags(f,dt);
   if(f.kit.update)f.kit.update(f,dt);
   if(f.inSmoke||f.phase||(eclipse>0&&eclipseOwner===f))f.invis=true;
+  if(f.ultT>0)f.ultT-=dt;
   meltOut(f,dt,inp);
   const stun=stunned(f);
   if(f.hp<=0){f.st='down'}
@@ -2961,11 +2963,14 @@ function freeControl(f,dt,inp){
 const ULT_REACH={tide:14,gloam:1e9,orbit:['foe',7],bramble:14,dash:1e9,anvil:12,echo:9,cipher:14,murk:1e9,prism:12,doppel:9,vane:12,host:14};
 function veilBreak(t){if(!(t.veil>0))return;t.veil=0;t.veilSw=false;float(t,'REVEALED','#fff2a8');fxFlash(chest(t),'#fff2a8',1.3,.25);emit(chest(t),'#fff2a8',16,3);snd('parry')}
 function ultReveal(f){const R=ULT_REACH[f.def.id];for(const t of foesOf(f)){if(!(t.veil>0))continue;const foe=Array.isArray(R),d=foe?hdist(t.pos,(f.foe||t).pos):hdist(t.pos,f.pos),rr=foe?R[1]:(R==null?9:R);if(d<=rr)veilBreak(t)}}
+// wave mode: every signature move also blasts nearby grunts away
+function waveUltBlast(f){if(!(match&&match.mode==='waves')||f.def.minion)return;const c=f.pos.clone();c.y=0;let n=0;for(const t of foesOf(f)){if(!t.def.minion||t.hp<=0||hdist(t.pos,c)>5.5)continue;n++;damage(f,t,8,{dir:dirTo(c,t.pos),kb:9,up:5,heavy:true})}
+  fxRing(c,EL[f.def.el].c,.5,5.8,.45);fxRing(c,'#ffffff',.3,5,.35);emit(V(c.x,.5,c.z),EL[f.def.el].c,26,8,.3);if(n)shakeIt(.3)}
 function useSkill(f,k){
   const s=f.kit[k];if(!s||f.cd[k]>0)return false;
   const cost=s.cost||0;if(f.en<cost){if(f.isP)float(f,'NEED ENERGY','#ffd27a');return false}
   if(s.can&&!s.can(f)){if(f.isP)float(f,'NOT READY','#ffd27a');return false}
-  windup(f,'skill',f=>{if(f.veil>0&&k!=='e'){f.veil=0;f.veilSw=false;float(f,'VEIL DROPPED','#fff2a8');emit(chest(f),'#fff2a8',12,3)}const r=s.run(f);if(r===false)return;if(k==='r')ultReveal(f);
+  windup(f,'skill',f=>{if(f.veil>0&&k!=='e'){f.veil=0;f.veilSw=false;float(f,'VEIL DROPPED','#fff2a8');emit(chest(f),'#fff2a8',12,3)}if(k==='r')f.ultT=4;const r=s.run(f);if(r===false){if(k==='r')f.ultT=0;return}if(k==='r'){ultReveal(f);waveUltBlast(f)}
     if(k==='r'&&f.foe&&f.foe.def.id==='echo'&&hdist(f.pos,f.foe.pos)<15)addMirror(f.foe,40);
     f.cd[k]=r==='free'?.5:s.cd||0;f.en=Math.max(0,f.en-cost);
     if(f.isP)flashSkill(k)});
@@ -3054,10 +3059,10 @@ function aiThink(f,dt){
     else if(f.status.blind>0){h.mv=V(rand(-1,1),0,rand(-1,1)).normalize();if(R<.3)h.atk=true}
     else if(myR>safeR-2.6){h.mv=dirTo(f.pos,V()).addScaledVector(side,.3).normalize();if(myR>safeR-.6&&R<.5+L*.4)h.jump=true}
     else if(myR>safeR-2.2){h.mv=dirTo(f.pos,V());}
-    else if(threat&&canReact&&R<.25+L*.55){const c=Math.random();if(c<.35)h.dash=true,h.mv=side;else if(c<.6)h.jump=true;else h.block=true}
-    else if((o.st==='atk'||o.st==='heavy'||(o.st==='special'&&o.special&&o.special.tele))&&canReact&&dist<reach+1.2&&R<.25+L*.5){if(Math.random()<.65)h.block=true;else{h.dash=true;h.mv=side.clone().addScaledVector(d,-.6).normalize()}}
-    else if(o.st==='vortex'&&dist<5&&R<.3+L*.5){h.mv=d.clone().multiplyScalar(-1).addScaledVector(side,.6).normalize();if(R<.4)h.dash=true}
-    else if(f.token===false||a.rest>0){const lo=f.token===false?7:5,hi=f.token===false?9.5:7.5;if(dist<lo)h.mv=d.clone().multiplyScalar(-1).addScaledVector(side,.9).normalize();else if(dist>hi)h.mv=d.clone().addScaledVector(side,.6).normalize();else h.mv=side.clone().addScaledVector(d,.1).normalize()}
+    else if(!f.def.minion&&threat&&canReact&&R<.25+L*.55){const c=Math.random();if(c<.35)h.dash=true,h.mv=side;else if(c<.6)h.jump=true;else h.block=true}
+    else if(!f.def.minion&&(o.st==='atk'||o.st==='heavy'||(o.st==='special'&&o.special&&o.special.tele))&&canReact&&dist<reach+1.2&&R<.25+L*.5){if(Math.random()<.65)h.block=true;else{h.dash=true;h.mv=side.clone().addScaledVector(d,-.6).normalize()}}
+    else if(!f.def.minion&&o.st==='vortex'&&dist<5&&R<.3+L*.5){h.mv=d.clone().multiplyScalar(-1).addScaledVector(side,.6).normalize();if(R<.4)h.dash=true}
+    else if(f.token===false||a.rest>0){const mn=f.def.minion,lo=mn?2.3:f.token===false?7:5,hi=mn?3.8:f.token===false?9.5:7.5;if(dist<lo)h.mv=d.clone().multiplyScalar(-1).addScaledVector(side,.9).normalize();else if(dist>hi)h.mv=d.clone().addScaledVector(side,.6).normalize();else h.mv=side.clone().addScaledVector(d,.1).normalize()}
     else{
       let used=false;
       for(const k of ['r','x','z','e','q']){const s=f.kit[k];if(!s||used)continue;
@@ -3429,7 +3434,7 @@ function makeRelicWeapon(f){const r=f.rig;if(r.relic)return;r.relic=true;f.relic
 
 const BIG_GUARDS=['bulwark','shieldguard'];
 function nextWave(){endArenaEvent();wave.n++;wave.between=0;wave.cleared=false;const n=wave.n;let q=[];
-  const boss=n%3===0&&!match.story;
+  const boss=n%5===0&&!match.story;
   if(boss){const opts=ROSTER.filter(d=>d.id!==P.def.id);q=['champ:'+opts[Math.floor(Math.random()*opts.length)].id]}
   else{const cnt=n===1?2:Math.min(Math.round(2+n*1.6),16);
     for(let i=0;i<cnt;i++){let pool=['skeleton','scout'];if(n>=2)pool.push('sentinel','snake','slinger');if(n>=3)pool.push('cobra');if(n>=4)pool.push('lancer','ambusher','snake','skeleton','cobra');
@@ -3501,7 +3506,7 @@ function trainingStep(dt){P.en=100;for(const k in P.cd)P.cd[k]=0;let best=null,b
 function waveStep(dt){if(!wave||roundOver)return;
   const alive=fighters.filter(f=>f!==P&&f.hp>0&&!f.removed);
   let best=null,bd=1e9;for(const f of alive){const d=hdist(f.pos,P.pos)+(f.invis?6:0);if(d<bd){bd=d;best=f}}if(best)P.foe=best;
-  const tk=f=>hdist(f.pos,P.pos)+(f.ai.rest>0?40:0)-(f.token?3:0);alive.slice().sort((a,b)=>tk(a)-tk(b)).forEach((f,i)=>{f.token=i<1});
+  const tk=f=>hdist(f.pos,P.pos)+(f.ai.rest>0?40:0)-(f.token?3:0);alive.slice().sort((a,b)=>tk(a)-tk(b)).forEach((f,i)=>{f.token=i<(f.def.minion?3:1)});
   updArenaEvent(dt);updRelic(dt);
   const maxAlive=Math.min(3+Math.floor(wave.n/2),7);
   wave.spawnT-=dt;if(wave.queue.length&&alive.length<maxAlive&&wave.spawnT<=0){wave.spawnT=.7;spawnEnemy(wave.queue.shift())}
@@ -3694,7 +3699,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=94;
+const NET_VER=95;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
