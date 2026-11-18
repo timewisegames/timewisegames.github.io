@@ -1266,7 +1266,7 @@ function meleeHit(f,range,dmg,o){
   for(const t of fighters){if(t.team===f.team||t.hp<=0||t.removed)continue;const d=dirTo(f.pos,t.pos),dist=hdist(f.pos,t.pos);
     if(dist<range*f.size+t.rad&&fw.dot(d)>.3&&Math.abs(t.pos.y-f.pos.y)<1.7*f.size)damage(f,t,dmg,Object.assign({dir:d,melee:true},o))}
   if(o.breaks)for(const s of solids){if(s.dead)continue;const ds=dirTo(f.pos,s.pos);if(hdist(f.pos,s.pos)<range*f.size+s.r&&fw.dot(ds)>.3)hitSolid(s,o.breaks)}
-  shadesHitArc(f,range,dmg);
+  shadesHitArc(f,range,dmg,o.heavy);
 }
 
 /* ================= SOLIDS: pillars, walls, gongs ================= */
@@ -2410,7 +2410,7 @@ KITS.gloam={
   hud:f=>f.inShadow?'Hidden in shadow':'In the light',
   q:{n:'Shadow Step',d:'Sink into the floor and rise up right behind your foe. Your next hit deals +60%. Outside shadow it costs 25 energy.',cd:5,ai:[2,16],can:f=>f.inShadow||f.en>=25,run(f){if(!f.inShadow)f.en-=25;teleportFx(f);fxRing(f.pos,'#6b4bd8',.3,1.6,.35);f.under=true;f.phase=true;snd('dash');
     special(f,{dur:.4,kin:true,iframes:true,pose:'channel',update(f){f.vel.set(0,0,0)},end(f){f.under=false;f.phase=false;const o=f.foe;const b=fwd(o).multiplyScalar(-1.5);const p=o.pos.clone().add(b);p.y=Math.max(0,o.pos.y);clampPlat(p,PLAT_R-.7);f.pos.copy(p);f.vel.set(0,0,0);f.yaw=Math.atan2(o.pos.x-p.x,o.pos.z-p.z);f.riseT=.3;fxRing(p,'#a07bff',.3,1.8,.35);emit(V(p.x,.2,p.z),'#3a2560',18,4,-.5);f.ambush=2.2;f.iframes=.25}})}},
-  e:{n:'Umbral Uprising',d:'Sink into the floor and let three shadow doubles rise up around your foe and attack for 3.5 seconds (they can be struck down). Nothing can hit you while you are underground. You surface behind your foe and your next hit deals 60% more.',cd:11,ai:[0,12],run(f){const o=f.foe;if(!o||o.hp<=0)return false;
+  e:{n:'Umbral Uprising',d:'Sink into the floor and let three shadow doubles rise up around your foe and attack for 3 seconds. They can be struck down: two slashes or one heavy breaks each. Nothing can hit you while you are underground. You surface behind your foe and your next hit deals 60% more.',cd:11,ai:[0,12],run(f){const o=f.foe;if(!o||o.hp<=0)return false;
     snd('boom');float(f,'UPRISING','#c9b3ff');fxRing(f.pos,'#6b4bd8',.3,2,.4);emit(chest(f),'#2a1840',20,3,-.3);
     const a0=rand(0,7);for(let i=0;i<3;i++){const a=a0+i*Math.PI*2/3;const p=clampPlat(V(o.pos.x+Math.cos(a)*2.6,0,o.pos.z+Math.sin(a)*2.6),PLAT_R-1);fxRing(p,'#6b4bd8',1.4,.6,.5+i*.12);spawnShade(f,p,.25+i*.12)}
     f.under=true;f.phase=true;
@@ -2561,15 +2561,15 @@ function updWindWalls(dt){for(const w of windWalls){w.t-=dt;const perp=V(-w.d.z,
   windWalls=windWalls.filter(w=>w.t>0)}
 function spawnShade(owner,pos,delay){const rig=buildRig(owner.def);rig.all.forEach(m=>{m.transparent=true;m.opacity=.85;m.color.set('#1b1230')});rig.aura.visible=false;rig.root.position.set(pos.x,-2.2,pos.z);world.add(rig.root);
   const eye=new T.MeshBasicMaterial({color:'#c9b3ff'});[-1,1].forEach(q=>add(rig.head,sph(.03,8,6),eye,q*.072,.012,.205).castShadow=false);
-  shades.push({rig,pos:pos.clone(),owner,t:-delay,atk:.3,swing:0,dead:false,life:3.5,hp:10})}
+  shades.push({rig,pos:pos.clone(),owner,t:-delay,atk:.6,swing:0,dead:false,life:3,hp:10})}
 // shadow doubles can be struck down
 function shadeHittable(s){return !s.dead&&s.t>=.3&&s.t<=s.life}
-function hitShade(s,dmg,by,dir){if(!shadeHittable(s))return;s.hp-=dmg;s.atk=Math.max(s.atk,.45);s.flinch=.18;const c=V(s.pos.x,1.1,s.pos.z);emit(c,'#5a3a8a',8,3,.2);if(dir)s.pos.addScaledVector(dir,.35);snd('block');
+function hitShade(s,dmg,by,dir){if(!shadeHittable(s))return;s.hp-=dmg;s.atk=Math.max(s.atk,.45);s.flinch=.35;const c=V(s.pos.x,1.1,s.pos.z);emit(c,'#5a3a8a',8,3,.2);if(dir)s.pos.addScaledVector(dir,.35);snd('block');
   if(s.hp<=0){s.dead=true;world.remove(s.rig.root);fxFlash(c,'#c9b3ff',1.8,.3);emit(c,'#3a2560',24,5,.4,1.2);emit(c,'#c9b3ff',10,4,-.2);fxRing(s.pos,'#7a4bd8',.3,1.8,.35);if(by&&by.def)float(s.owner,'SHADOW BROKEN','#c9b3ff');snd('parry')}}
 // what a fighter should turn to: a nearby shadow double beats a foe hiding underground or standing further away
 function nearShade(f,maxD){let b=null,bd=maxD;for(const s of shades){if(!shadeHittable(s)||s.owner.team===f.team)continue;const d=hdist(f.pos,s.pos);if(d<bd){bd=d;b=s}}return b}
 function facePos(f){const o=f.foe;if(!o)return null;const sh=nearShade(f,4.5);if(sh&&(o.under||o.phase||hdist(f.pos,sh.pos)+.6<hdist(f.pos,o.pos)))return sh.pos;return o.pos}
-function shadesHitArc(f,range,dmg){const fw=fwd(f);for(const s of shades){if(!shadeHittable(s)||s.owner.team===f.team)continue;const d=dirTo(f.pos,s.pos);if(hdist(f.pos,s.pos)<range*f.size+.45&&fw.dot(d)>.3)hitShade(s,dmg,f,d)}}
+function shadesHitArc(f,range,dmg,heavy){const fw=fwd(f);for(const s of shades){if(!shadeHittable(s)||s.owner.team===f.team)continue;const d=dirTo(f.pos,s.pos);if(hdist(f.pos,s.pos)<range*f.size+.7&&(heavy||fw.dot(d)>-.15))hitShade(s,dmg,f,d)}}
 function updShades(dt){for(const s of shades){s.t+=dt;if(s.t<0)continue;const r=s.rig;
   if(s.owner.hp<=0&&s.t<s.life)s.t=s.life;
   if(s.t<.45){r.root.position.set(s.pos.x,lerp(-2.2,0,1-Math.pow(1-s.t/.45,3)),s.pos.z);if(Math.random()<.7*FR)emit(V(s.pos.x+rand(-.5,.5),.1,s.pos.z+rand(-.5,.5)),'#5a3a8a',1,2.2,-.6);continue}
@@ -2580,7 +2580,7 @@ function updShades(dt){for(const s of shades){s.t+=dt;if(s.t<0)continue;const r=
   if(o){const d=dirTo(s.pos,o.pos),dist=bd;r.root.rotation.y=Math.atan2(d.x,d.z);s.atk-=dt;
     if(dist>1.5){s.pos.addScaledVector(d,Math.min(dist-1.4,7*dt));s.wk=(s.wk||0)+dt*12;const ph=Math.sin(s.wk);r.legs[0].rotation.x=ph*.8;r.legs[1].rotation.x=-ph*.8;r.shins[0].rotation.x=Math.max(0,-ph)*.9;r.shins[1].rotation.x=Math.max(0,ph)*.9}
     else{const k=Math.pow(.85,FR);r.legs[0].rotation.x*=k;r.legs[1].rotation.x*=k}
-    if(dist<1.9&&s.atk<=0&&o.pos.y<2){s.atk=.75;s.swing=.25;damage(s.owner,o,5,{dir:d,melee:true,kb:2.5,up:1});snd('swing')}}
+    if(dist<1.9&&s.atk<=0&&o.pos.y<2){s.atk=1.1;s.swing=.25;damage(s.owner,o,3,{dir:d,melee:true,kb:1.5,up:.5,noStun:true});snd('swing')}}
   if(s.swing>0){s.swing-=dt;const p=1-s.swing/.25;r.arms[1].rotation.x=-2.7+p*2.4;r.torso.rotation.x=.3*p}else{r.arms[1].rotation.x=lerp(r.arms[1].rotation.x,-.9,Math.min(1,dt*8));r.torso.rotation.x=.15}
   r.arms[0].rotation.x=-.6;r.root.position.set(s.pos.x,0,s.pos.z);
   if(Math.random()<.3*FR)emit(V(s.pos.x+rand(-.3,.3),rand(.2,1.8),s.pos.z+rand(-.3,.3)),'#3a2560',1,.6,-.4)}
@@ -3619,7 +3619,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=90;
+const NET_VER=91;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
