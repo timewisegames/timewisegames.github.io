@@ -591,13 +591,16 @@ const ROSTER=[
 const ROLES={prism:'Master of Spectrum',doppel:'Master of Illusion',vane:'The Fallen Champion',cinder:'Fire Ninja',tempest:'Storm Ninja',basalt:'Earth Ninja',rime:'Frost Ninja',locust:'Wind Ninja',tide:'Master of Water',gloam:'Master of Shadow',orbit:'Master of Gravity',bramble:'Master of Nature',dash:'Master of Speed',anvil:'Master of Metal',echo:'Master of Mirrors',cipher:'Master of Mind',murk:'Master of Smoke',aurel:'Master of Light'};
 ROSTER.forEach(d=>d.role=ROLES[d.id]);
 const GRUNTS={
-  sentinel:{id:'sentinel',name:'Clay Sentinel',role:'Spire Guard',el:'earth',hp:40,spd:4.6,pow:.7,range:2,body:'#9a5a3a',accent:'#e0a060',head:'helmg',weapon:'spear',minion:true},
-  slinger:{id:'slinger',name:'Ash Slinger',role:'Spire Guard',el:'fire',hp:32,spd:5,pow:.7,range:1.8,body:'#5a4a52',accent:'#ff8a4a',head:'helmg',weapon:'sling',minion:true,ranged:true},
-  lancer:{id:'lancer',name:'Wisp Lancer',role:'Spire Guard',el:'speed',hp:36,spd:6.6,pow:.75,range:2.4,body:'#3a4a6a',accent:'#9fd4ff',head:'helmg',weapon:'spear',minion:true},
-  bulwark:{id:'bulwark',name:'Iron Bulwark',role:'Spire Guard',el:'metal',hp:95,spd:3.8,pow:1.1,range:2.1,size:1.3,body:'#4a4e58',accent:'#ffb070',head:'visor',weapon:'hammer',minion:true},
-  scout:{id:'scout',name:'Dust Scout',role:'Scout · twin daggers',el:'speed',hp:28,spd:7.6,pow:.6,range:1.7,size:.92,body:'#6a5a3a',accent:'#ffd36a',head:'helmg',weapon:'daggers',minion:true},
-  shieldguard:{id:'shieldguard',name:'Bronze Aegis',role:'Shield-bearer · break with heavy',el:'metal',hp:58,spd:4.1,pow:.8,range:2.1,size:1.12,body:'#5a4a3a',accent:'#e0b44e',head:'visor',weapon:'shieldspear',minion:true},
-  ambusher:{id:'ambusher',name:'Veil Stalker',role:'Ambusher · stealth',el:'shadow',hp:34,spd:6.2,pow:.95,range:1.9,body:'#2a2238',accent:'#a07bff',head:'helmg',weapon:'daggers',minion:true},
+  sentinel:{id:'sentinel',name:'Clay Sentinel',role:'Spire Guard',el:'earth',hp:14,spd:4.6,pow:.7,range:2,body:'#9a5a3a',accent:'#e0a060',head:'helmg',weapon:'spear',minion:true},
+  slinger:{id:'slinger',name:'Ash Slinger',role:'Spire Guard',el:'fire',hp:10,spd:5,pow:.7,range:1.8,body:'#5a4a52',accent:'#ff8a4a',head:'helmg',weapon:'sling',minion:true,ranged:true},
+  lancer:{id:'lancer',name:'Wisp Lancer',role:'Spire Guard',el:'speed',hp:12,spd:6.6,pow:.75,range:2.4,body:'#3a4a6a',accent:'#9fd4ff',head:'helmg',weapon:'spear',minion:true},
+  bulwark:{id:'bulwark',name:'Iron Bulwark',role:'Spire Guard',el:'metal',hp:34,spd:3.8,pow:1.1,range:2.1,size:1.3,body:'#4a4e58',accent:'#ffb070',head:'visor',weapon:'hammer',minion:true},
+  scout:{id:'scout',name:'Dust Scout',role:'Scout · twin daggers',el:'speed',hp:9,spd:7.6,pow:.6,range:1.7,size:.92,body:'#6a5a3a',accent:'#ffd36a',head:'helmg',weapon:'daggers',minion:true},
+  shieldguard:{id:'shieldguard',name:'Bronze Aegis',role:'Shield-bearer · break with heavy',el:'metal',hp:24,spd:4.1,pow:.8,range:2.1,size:1.12,body:'#5a4a3a',accent:'#e0b44e',head:'visor',weapon:'shieldspear',minion:true},
+  ambusher:{id:'ambusher',name:'Veil Stalker',role:'Ambusher · stealth',el:'shadow',hp:12,spd:6.2,pow:.95,range:1.9,body:'#2a2238',accent:'#a07bff',head:'helmg',weapon:'daggers',minion:true},
+  skeleton:{id:'skeleton',name:'Bone Warrior',role:'Risen guard · rattles apart',el:'shadow',hp:12,spd:4.4,pow:.7,range:2,size:.96,body:'#e9e4d4',accent:'#3a3530',head:'helmg',weapon:'bonesword',minion:true,skeleton:true},
+  cobra:{id:'cobra',name:'Dune Cobra',role:'Giant serpent · venom bite',el:'earth',hp:14,spd:5.4,pow:.75,range:2.4,size:1.35,body:'#4f6a2a',accent:'#d8c25a',head:'helmg',weapon:'none',minion:true,snake:true},
+  snake:{id:'snake',name:'Scalefang Warrior',role:'Serpent warrior · venom strike',el:'earth',hp:13,spd:5,pow:.75,range:2.3,size:1.05,body:'#2f5f58',accent:'#d9894a',head:'helmg',weapon:'spear',minion:true,serpent:true},
   dummy:{id:'dummy',name:'Training Dummy',role:'Practice target',el:'earth',hp:300,spd:0,pow:0,range:0,size:1.1,body:'#9a7a4a',accent:'#e8d2a0',head:'helmg',weapon:'none',minion:true}
 };
 const BYID=Object.fromEntries(ROSTER.map(d=>[d.id,d]));
@@ -1151,6 +1154,7 @@ function buildWeapon(d,w,o,m,rune){
     case 'sundisk':add(w,cyl(.03,.03,.3,6),m.wood,0,0,0);add(w,tor(.44,.07,8,30),m.acc,0,.55,0);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;add(w,cone(.05,.24,4),m.gold,Math.cos(a)*.56,.55+Math.sin(a)*.56,0,0,0,a-Math.PI/2)}add(w,sph(.1,8,6),m.gold,0,.55,0);break;
     case 'daggers':[w,o].forEach((g,i)=>{const h=new T.Group();h.rotation.x=i?Math.PI/2:0;g.add(h);add(h,cyl(.025,.025,.16,6),m.black,0,0,0);add(h,box(.1,.02,.04),m.acc,0,.08,0);add(h,cone(.035,.36,4),M('#c9ccd4'),0,.27,0)});break;
     case 'shieldspear':add(w,cyl(.025,.025,1.6,6),m.wood,0,.3,0);add(w,cone(.06,.28,6),M('#c9ccd4'),0,1.22,0);{const sh=new T.Group();sh.position.set(0,0,.12);o.add(sh);add(sh,cyl(.58,.58,.07,20),M('#b9862e'),0,0,0,Math.PI/2);add(sh,tor(.58,.04,6,24),M('#e0b44e'),0,0,0);add(sh,sph(.13,10,8),M('#e0b44e'),0,0,.05).scale.z=.5}break;
+    case 'bonesword':{const bone=M('#e9e4d4');add(w,cyl(.03,.03,.22,6),M('#3a3530'),0,0,0);add(w,box(.2,.05,.06),bone,0,.13,0);add(w,box(.07,.7,.025),bone,0,.5,0);add(w,cone(.05,.14,4),bone,0,.92,0);[-1,1].forEach(q=>add(w,sph(.04,6,5),bone,q*.1,.13,0));break}
     case 'spear':add(w,cyl(.025,.025,1.8,6),m.wood,0,.35,0);add(w,cone(.06,.3,6),m.porc,0,1.38,0);add(w,box(.12,.06,.02),m.acc,0,1.18,0);break;
     case 'sling':add(w,sph(.12,10,8),rune,0,.1,0).castShadow=false;add(o,sph(.1,8,6),rune,0,0,0).castShadow=false;break;
     case 'glass':add(w,box(.03,.8,.07),new T.MeshToonMaterial({color:'#ffe2c0',gradientMap:grad,transparent:true,opacity:.8}),0,.45,0);{const sh=new T.Mesh(cyl(.56,.56,.05,6),new T.MeshToonMaterial({color:'#ffc27a',gradientMap:grad,transparent:true,opacity:.55}));sh.rotation.z=Math.PI/2;sh.position.x=-.08;o.add(sh)}break;
@@ -2773,6 +2777,9 @@ KITS.locust={
   onDealHit(f,t,o){if(!o.blocked&&!o.dot){const dd=dirTo(f.pos,t.pos);t.vel.x+=dd.x*3;t.vel.z+=dd.z*3}}
 };
 KITS.sentinel={passive:['',''],q:null,e:null,r:null};
+KITS.skeleton={passive:['',''],q:null,e:null,r:null,onDeath(f){boneBurst(f)}};
+KITS.cobra={passive:['',''],q:null,e:null,r:null,atkSpeed:()=>1.4,onDealHit(f,t,o){if(!o.blocked&&!o.dot&&t.hp>0)setStatus(t,'poison',2)}};
+KITS.snake={passive:['',''],q:null,e:null,r:null,onDealHit(f,t,o){if(!o.blocked&&!o.dot&&t.hp>0&&Math.random()<.5)setStatus(t,'poison',1.6)}};
 KITS.bulwark={passive:['',''],q:null,e:null,r:null};
 KITS.dummy={passive:['',''],q:null,e:null,r:null};
 KITS.scout={passive:['',''],q:null,e:null,r:null,atkSpeed:()=>1.5,update(f,dt){if(Math.hypot(f.vel.x,f.vel.z)>6&&Math.random()<.2*FR)fxGhost(f,'#ffd36a')}};
@@ -2854,7 +2861,7 @@ function groundSmash(f,big){const c=f.pos.clone().addScaledVector(fwd(f),1.4*f.s
   fxRing(c,'#d08b3c',.4,r+.8,.45);fxRing(c,'#ffd9a0',.2,r,.3);const n=big?7:4;for(let i=0;i<n;i++){const a=i/n*Math.PI*2;fxSpike(V(c.x+Math.cos(a)*r*.7,0,c.z+Math.sin(a)*r*.7),'#8a6a4a')}
   emit(V(c.x,.2,c.z),'#c8a878',big?30:16,big?6:4,.6,1.3);shakeIt(big?.5:.25);snd('boom')}
 const HEAVY_INFO={basalt:{n:'Ground Smash',d:'Your heavy attack (K) slams your hammer into the floor. The shockwave launches foes, breaks guards and shatters nearby pillars. The third hit of your combo is a smaller slam.'}};
-const MELEE={prism:[6,7,10],doppel:[6,7,10],vane:[9,9,14],cinder:[7,7,11],tempest:[6,6,10],basalt:[8,8,13],rime:[6,7,10],tide:[7,7,11],gloam:[7,7,11],orbit:[6,6,10],bramble:[6,7,11],dash:[5,5,8],anvil:[8,8,13],echo:[6,7,10],cipher:[6,6,10],murk:[7,7,11],locust:[6,7,10],aurel:[8,8,12],sentinel:[4,4,7],slinger:[3,3,5],lancer:[4,4,6],bulwark:[7,7,12],host:[9,9,14],scout:[3,3,5],shieldguard:[5,5,8],ambusher:[5,5,9],dummy:[0,0,0]};
+const MELEE={prism:[6,7,10],doppel:[6,7,10],vane:[9,9,14],cinder:[7,7,11],tempest:[6,6,10],basalt:[8,8,13],rime:[6,7,10],tide:[7,7,11],gloam:[7,7,11],orbit:[6,6,10],bramble:[6,7,11],dash:[5,5,8],anvil:[8,8,13],echo:[6,7,10],cipher:[6,6,10],murk:[7,7,11],locust:[6,7,10],aurel:[8,8,12],sentinel:[4,4,7],skeleton:[4,4,6],snake:[4,4,6],cobra:[3,3,5],slinger:[3,3,5],lancer:[4,4,6],bulwark:[7,7,12],host:[9,9,14],scout:[3,3,5],shieldguard:[5,5,8],ambusher:[5,5,9],dummy:[0,0,0]};
 
 /* ================= FIGHTER UPDATE ================= */
 function updFighter(f,dt,inp){
@@ -3003,12 +3010,12 @@ function aiThink(f,dt){
    a.chain=a.chain||0;if(a.rest>0)a.rest-=dt;
    const od=hdist(f.pos,o.pos);const thr=((o.st==='atk'||o.st==='heavy'||(o.st==='special'&&o.special&&o.special.tele))&&od<f.def.range*f.size+o.rad+2.5)||projs.some(p=>p.owner!==f&&hdist(p.pos,f.pos)<7);
    if(thr){if(a.reactAt==null){const rd=o.st==='heavy'?lerp(.32,.1,L):.35;a.reactAt=clock+rd;a.t=Math.min(a.t,rd+.01)}}else a.reactAt=null}
-  if(f.hp>0&&!(f.escCd>clock)&&(f.pressHits||0)>=2&&clock-(f.pressAt||-9)<.8&&(f.st==='hurt'||f.st==='free'||f.st==='block')&&!(clock<(a.escNo||0))){
+  if(!f.def.minion&&f.hp>0&&!(f.escCd>clock)&&(f.pressHits||0)>=2&&clock-(f.pressAt||-9)<.8&&(f.st==='hurt'||f.st==='free'||f.st==='block')&&!(clock<(a.escNo||0))){
     if(a.escAt==null){if(Math.random()<.4+L*.6)a.escAt=clock+lerp(.3,.06,L)+Math.random()*.08;else a.escNo=clock+1.2}
     if(a.escAt!=null&&clock>=a.escAt){a.escAt=null;const eh=aiEscape(f,o);a.h=eh;a.fresh=true;a.t=.3;if(f.st==='free'||f.st==='block')f.escCd=clock+2}}
   else a.escAt=null;
   // read heavy wind-ups: parry right before impact, or step out of reach (heavies break a normal guard)
-  if(o.st==='heavy'&&!o.hitDone&&(f.st==='free'||f.st==='block')&&f.hp>0){const od2=hdist(f.pos,o.pos),rem=(.32-o.t)/.8,rr=(REACH[o.def.id]?REACH[o.def.id].len:o.def.range*o.size+1.2)+f.rad;
+  if(!f.def.minion&&o.st==='heavy'&&!o.hitDone&&(f.st==='free'||f.st==='block')&&f.hp>0){const od2=hdist(f.pos,o.pos),rem=(.32-o.t)/.8,rr=(REACH[o.def.id]?REACH[o.def.id].len:o.def.range*o.size+1.2)+f.rad;
     if(!a.hvDone&&od2<rr+.8&&rem<lerp(.12,.24,L)&&rem>0){a.hvDone=true;const c=Math.random();
       if(c<.06+L*.12){a.h={block:true};a.fresh=true;a.t=.4}
       else if(c<.55+L*.4&&f.cd.dash<=0){const away=dirTo(o.pos,f.pos),sd=V(-away.z,0,away.x).multiplyScalar(Math.random()<.5?1:-1);a.h={dash:true,mv:sd.addScaledVector(away,.9).normalize()};a.fresh=true;a.t=.35}
@@ -3277,6 +3284,8 @@ function animate(f,dt){
   if(r._sw){const w=r._sw,U=r.rimU;w.t+=dt;const p=Math.min(1,w.t/w.dur);U.uSw.value.x=p*p*(3-2*p);if(p>=1){r._sw=null;U.uSwOn.value=0;r.all.forEach(m=>{m.transparent=op<1;m.opacity=op})}}
   if(op<=0&&!r._sw)r.body.visible=false;
   if(op<1&&f!==P)r.aura.visible=false;
+  if(r.snake)snakeAnim(f,r,dt);
+  if(r.serpent)serpentAnim(f,r,dt);
 }
 
 /* ================= CAMERA ================= */
@@ -3404,24 +3413,75 @@ function makeRelicWeapon(f){const r=f.rig;if(r.relic)return;r.relic=true;f.relic
   if(!n)r.hands.forEach(h=>{const m=new T.Mesh(tor(.1,.025,6,16),new T.MeshBasicMaterial({color:EL[f.def.el].c}));m.rotation.x=Math.PI/2;m.position.y=-.03;h.add(m)});
   r.trail.material.color.set('#ffe08a')}
 
-function nextWave(){endArenaEvent();wave.n++;wave.between=0;wave.cleared=false;const n=wave.n,q=[];const cnt=Math.min(2+n,12);
-  for(let i=0;i<cnt;i++){let pool=['sentinel','scout'];if(n>=2)pool.push('slinger','shieldguard');if(n>=3)pool.push('ambusher','lancer');if(n>=5&&i%4===3)pool=['bulwark','shieldguard'];q.push(pool[Math.floor(Math.random()*pool.length)])}
+const BIG_GUARDS=['bulwark','shieldguard'];
+function nextWave(){endArenaEvent();wave.n++;wave.between=0;wave.cleared=false;const n=wave.n;let q=[];
+  const boss=n%3===0&&!match.story;
+  if(boss){const opts=ROSTER.filter(d=>d.id!==P.def.id);q=['champ:'+opts[Math.floor(Math.random()*opts.length)].id]}
+  else{const cnt=n===1?2:Math.min(Math.round(2+n*1.6),16);
+    for(let i=0;i<cnt;i++){let pool=['skeleton','scout'];if(n>=2)pool.push('sentinel','snake','slinger');if(n>=3)pool.push('cobra');if(n>=4)pool.push('lancer','ambusher','snake','skeleton','cobra');
+      if(n>=2&&i%4===3)pool=n>=4?BIG_GUARDS:['shieldguard'];q.push(pool[Math.floor(Math.random()*pool.length)])}}
   if(match.story){q.length=0;q.push('scout','sentinel','shieldguard','scout','ambusher','slinger','sentinel')}
-  const boss=n%3===0&&!match.story;if(boss){const opts=ROSTER.filter(d=>d.id!==P.def.id);q.unshift('champ:'+opts[Math.floor(Math.random()*opts.length)].id)}
   wave.queue=q;wave.spawnT=.5;$('rd').textContent='WAVE '+n;
   if(n>1)banner(`<small>Wave ${n}</small>${boss?'MASTER BOSS':'FIGHT'}`,1.3,boss?'#ffd27a':'#ffffff');
   for(let i=0;i<2&&wave.queue.length;i++)spawnEnemy(wave.queue.shift());
-  if(n%2===0&&!match.story)later(boss?2.6:1.5,()=>{if(wave&&wave.n===n&&!roundOver)startArenaEvent()});
+  if(n%2===0&&!match.story&&!boss)later(1.5,()=>{if(wave&&wave.n===n&&!roundOver)startArenaEvent()});
 }
-function spawnEnemy(key){const n=wave.n;let def,lvl=Math.min(.7,.15+n*.045),champ=false;
+function spawnEnemy(key){const n=wave.n;let def,lvl,champ=false;const big=BIG_GUARDS.includes(key);lvl=big?Math.min(.35,.08+n*.025):Math.min(.2,.02+n*.015);
   if(key.startsWith('champ:')){def=BYID[key.slice(6)];lvl=Math.min(.9,.45+n*.03);champ=true}else def=GRUNTS[key];
   const f=mkFighter(def,false,lvl);f.foe=P;f.champion=champ;
-  f.maxhp=f.hp=f.chipHp=Math.round(def.hp*(champ?1.5+n*.06:1+n*.08));f.shieldUp=def.id==='shieldguard';if(champ){f.rig.root.scale.setScalar(1.12);f.size*=1.12}
+  f.maxhp=f.hp=f.chipHp=Math.round(champ?def.hp*(1.5+n*.06):big?Math.min(40,def.hp*(1+n*.025)):def.hp*(1+n*.04));if(def.skeleton)dressSkeleton(f);if(def.snake)dressSnake(f);if(def.serpent)dressSerpent(f);f.shieldUp=def.id==='shieldguard';if(champ){f.rig.root.scale.setScalar(1.12);f.size*=1.12}
   let p=V(0,0,-8);for(let i=0;i<12;i++){const a=rand(0,7),r=rand(7,13);p=clampPlat(V(P.pos.x+Math.cos(a)*r,0,P.pos.z+Math.sin(a)*r),safeR-3);if(hdist(p,P.pos)>6&&!solids.some(s=>!s.dead&&hdist(s.pos,p)<1.8))break}
   f.pos.set(p.x,9,p.z);f.yaw=Math.atan2(P.pos.x-p.x,P.pos.z-p.z);f.en=champ?40:0;
   fighters.push(f);fxColumn(V(p.x,0,p.z),EL[def.el].c,10,.7,.6);fxRing(V(p.x,0,p.z),EL[def.el].c,.3,2,.5);
   if(champ){banner(`<small>Master Boss · ${def.role}</small>${def.name.toUpperCase()}`,1.5,EL[def.el].c);say('A master boss approaches!')}
   if(!P.foe||P.foe.hp<=0||P.foe.removed)P.foe=f;return f}
+// skeletons: skull, ribs, thin bones
+function dressSkeleton(f){const r=f.rig,bone=M('#ece6d6'),dk=M('#1c1814');r.head.children.forEach(c=>c.visible=false);
+  const sk=new T.Group();r.head.add(sk);const cr=add(sk,sph(.22,14,10),bone,0,.05,0);cr.scale.set(.95,1,1.05);add(sk,box(.24,.1,.16),bone,0,-.12,.06);
+  [-1,1].forEach(q=>{add(sk,sph(.055,8,6),dk,q*.075,.05,.18).scale.set(1,1.15,.5);});add(sk,cone(.025,.05,3),dk,0,-.03,.205,Math.PI,0,0);for(let i=0;i<5;i++)add(sk,box(.022,.03,.02),bone,-.06+i*.03,-.16,.15);
+  for(let i=0;i<4;i++){add(r.torso,box(.34-i*.03,.025,.04),dk,0,.62-i*.09,.17)}add(r.torso,box(.04,.36,.04),dk,0,.5,.18);
+  r.arms.forEach(a=>a.scale.set(.5,1,.5));r.legs.forEach(l=>l.scale.set(.55,1,.55));r.torso.scale.set(.78,1,.72);r.all.push(bone)}
+function boneBurst(f){const c=chest(f);for(let i=0;i<9;i++){const m=new T.Mesh(i%3?box(.05,.22,.05):sph(.07,6,5),M('#ece6d6'));const v=V(rand(-3,3),rand(3,7),rand(-3,3)),st=c.clone();fx(m,1.1,(mm,k)=>{const tt=k*1.1;mm.position.set(st.x+v.x*tt,Math.max(.05,st.y+v.y*tt-6*tt*tt),st.z+v.z*tt);mm.rotation.x+=.3;mm.rotation.z+=.2})}snd('block')}
+// snakes: a slithering serpent body replaces the humanoid
+function dressSnake(f){const r=f.rig,g=new T.Group();g.scale.setScalar(1.7);r.root.add(g);
+  const C1=M('#3f5a22'),C2=M('#5b7a2c'),BAND=M('#d8c25a'),BELLY=M('#d9cf9a'),DK=M('#1a1a12');
+  const segs=[],n=18;for(let i=0;i<n;i++){const u=i/(n-1),rad=i<6?lerp(.15,.2,i/6):lerp(.2,.05,(i-6)/(n-7));const m=new T.Mesh(sph(1,14,10),i%4===2?BAND:(i%2?C2:C1));m.scale.set(rad,rad,rad*1.35);m.castShadow=true;g.add(m);segs.push(m)}
+  // cobra hood behind the head
+  const hood=new T.Mesh(sph(1,16,10),C1);hood.scale.set(.34,.3,.06);g.add(hood);const hp=new T.Mesh(sph(1,12,8),BAND);hp.scale.set(.2,.17,.02);hp.position.z=.05;hood.add(hp);[-1,1].forEach(q=>{const sp=new T.Mesh(sph(1,8,6),DK);sp.scale.set(.05,.07,.02);sp.position.set(q*.11,.04,.06);hood.add(sp)});
+  // head: flat diamond skull, brows, slit eyes, fangs, forked tongue
+  const head=new T.Group();g.add(head);
+  const sk=add(head,sph(1,16,12),C2,0,0,.08);sk.scale.set(.17,.1,.26);const snout=add(head,sph(1,12,8),C2,0,-.01,.27);snout.scale.set(.11,.07,.1);
+  [-1,1].forEach(q=>{const br=add(head,box(.08,.03,.12),C1,q*.09,.07,.12,0,0,-q*.35);const ey=add(head,sph(.042,10,8),M('#ffd23a'),q*.115,.045,.15);add(head,box(.012,.05,.012),DK,q*.135,.045,.17);add(head,sph(.01,6,4),DK,q*.03,.02,.36)});
+  const jaw=new T.Group();jaw.position.set(0,-.05,.0);head.add(jaw);const jm=add(jaw,sph(1,12,8),BELLY,0,0,.14);jm.scale.set(.14,.04,.24);
+  [-1,1].forEach(q=>{add(head,cone(.022,.11,5),M('#f6f2e2'),q*.05,-.07,.3,Math.PI,0,0)});
+  const tongue=new T.Group();tongue.position.set(0,-.04,.32);head.add(tongue);add(tongue,box(.014,.008,.14),M('#d23a4a'),0,0,.07);[-1,1].forEach(q=>add(tongue,box(.01,.008,.07),M('#d23a4a'),q*.018,0,.16,0,q*.5,0));tongue.visible=false;
+  r.snake={g,segs,head,jaw,tongue,hood,ph:Math.random()*6};r.body.visible=false;[C1,C2,BAND,BELLY].forEach(m=>r.all.push(m))}
+// serpent warriors: a humanoid torso on a coiling snake tail, with a hooded snake head
+function dressSerpent(f){const r=f.rig,C1=M('#2f5f58'),C2=M('#3f7a6e'),BAND=M('#d9894a'),BELLY=M('#e6c48a'),DK=M('#141812');
+  r.legs.forEach(l=>l.visible=false);if(r.mats&&r.mats.skin)r.mats.skin.color.set('#3f7a6e');
+  const tail=new T.Group();r.root.add(tail);const segs=[];for(let i=0;i<13;i++){const rad=lerp(.2,.05,i/12),m=new T.Mesh(sph(1,12,9),i%3===1?BAND:(i%2?C2:C1));m.scale.set(rad,rad*.9,rad*1.4);m.castShadow=true;tail.add(m);segs.push(m)}
+  const belt=add(r.torso,cyl(.2,.22,.12,12),BAND,0,.08,0);belt.castShadow=true;
+  r.head.children.forEach(c=>c.visible=false);const h=new T.Group();r.head.add(h);h.position.y=.02;
+  const sk=add(h,sph(1,16,12),C2,0,.02,.08);sk.scale.set(.2,.15,.27);const sn=add(h,sph(1,12,8),C2,0,-.01,.28);sn.scale.set(.13,.09,.1);
+  [-1,1].forEach(q=>{add(h,box(.1,.035,.13),C1,q*.1,.12,.1,0,0,-q*.3);add(h,sph(.048,10,8),M('#ffcf3a'),q*.13,.07,.16);add(h,box(.012,.06,.012),DK,q*.155,.07,.18);add(h,cone(.022,.12,5),M('#f6f2e2'),q*.06,-.08,.3,Math.PI,0,0);add(h,sph(.011,6,4),DK,q*.035,.02,.37)});
+  const jaw=add(h,sph(1,12,8),BELLY,0,-.07,.16);jaw.scale.set(.15,.04,.22);
+  const hood=add(h,sph(1,16,10),C1,0,.04,-.1);hood.scale.set(.36,.32,.06);const hp=add(hood,sph(1,12,8),BAND,0,0,.6);hp.scale.set(.55,.5,.3);
+  const crest=add(h,cone(.05,.22,5),BAND,0,.2,-.02,-.4,0,0);
+  const tongue=new T.Group();tongue.position.set(0,-.05,.36);h.add(tongue);add(tongue,box(.014,.008,.14),M('#d23a4a'),0,0,.07);[-1,1].forEach(q=>add(tongue,box(.01,.008,.07),M('#d23a4a'),q*.018,0,.16,0,q*.5,0));tongue.visible=false;
+  r.serpent={tail,segs,tongue,jaw,ph:Math.random()*6};[C1,C2,BAND,BELLY].forEach(m=>r.all.push(m))}
+function serpentAnim(f,r,dt){const S=r.serpent;r.legs.forEach(l=>l.visible=false);const sp=Math.hypot(f.vel.x,f.vel.z);S.ph+=dt*(2.5+sp*1.5);const amp=.12+Math.min(.16,sp*.03);
+  const hy=r.hips.position.y;S.segs.forEach((m,i)=>{if(i<4){const u=i/3;m.position.set(Math.sin(S.ph-i*.6)*amp*.3*u,lerp(hy-.05,.17,u*u*(3-2*u)),lerp(0,-.35,u))}else{const k=i-3;m.position.set(Math.sin(S.ph-k*.75)*amp*Math.min(1,k/3+.3),.17-k*.004,-.35-k*.22)}});
+  S.tongue.visible=f.st!=='atk'&&Math.sin(clock*6+f.anim)>.6;S.jaw.rotation.x=f.st==='atk'?.4:0;
+  if(f.hp<=0)S.tail.rotation.z=Math.min(1.2,(S.tail.rotation.z||0)+dt*2)}
+function snakeAnim(f,r,dt){const S=r.snake;r.body.visible=false;const sp=Math.hypot(f.vel.x,f.vel.z);S.ph+=dt*(2.5+sp*1.4);const amp=.14+Math.min(.16,sp*.03);
+  const atk=f.st==='atk'||f.st==='heavy'?Math.sin(Math.min(1,f.t/.28)*Math.PI):0,hurt=f.st==='hurt'?1:0;
+  const NECK=7,rise=f.hp>0?1.05-hurt*.3:0;
+  S.segs.forEach((m,i)=>{if(i<NECK){const u=1-i/NECK;m.position.set(Math.sin(S.ph*.6+i)*.04,.18+rise*Math.pow(u,1.6)*.85+atk*u*.1,.05-i*.035+atk*u*.45)}
+    else{const k=i-NECK;m.position.set(Math.sin(S.ph-k*.7)*amp*Math.min(1,k/3+.3),.18,-.2-k*.2)}});
+  const top=S.segs[0].position;S.hood.position.set(top.x,top.y+.08,top.z-.02);S.hood.rotation.x=-.15+atk*.4;
+  S.head.position.set(top.x+Math.sin(S.ph*.8)*.03,top.y+.12-atk*.18,top.z+.12+atk*.35);S.head.rotation.x=.25+atk*.45-hurt*.3;S.jaw.rotation.x=.15+atk*.7;
+  S.tongue.visible=!atk&&Math.sin(clock*7+f.anim)>.55;if(S.tongue.visible)S.tongue.scale.z=.6+.4*Math.abs(Math.sin(clock*30));
+  if(f.hp<=0){S.g.rotation.z=Math.min(1.4,(S.g.rotation.z||0)+dt*3)}}
 function trainingStep(dt){P.en=100;for(const k in P.cd)P.cd[k]=0;let best=null,bd=1e9;for(const f of fighters){if(f===P)continue;const d=hdist(f.pos,P.pos);if(d<bd){bd=d;best=f}}if(best)P.foe=best;
   for(const f of fighters){if(f===P||!f.home)continue;if(clock-(f.lastHitT||0)>2.5){if(f.hp<f.maxhp)f.hp=Math.min(f.maxhp,f.hp+f.maxhp*dt);const d=V(f.home.x-f.pos.x,0,f.home.z-f.pos.z);if(f.grounded&&d.length()>.3)f.pos.addScaledVector(d,Math.min(1,dt*2))}}}
 function waveStep(dt){if(!wave||roundOver)return;
@@ -3566,7 +3626,7 @@ function fightStep(rdt){
     else if(W&&f===P){if(!roundOver){P.pos.set(0,7,0);P.vel.set(0,0,0);P.hp=Math.max(0,P.hp-15);float(P,'RECOVERED -15','#ffd27a');if(P.hp<=0)ko(null,P,'K.O.')}}
     else if(W){if(f.hp>0)ko(P,f,'RING OUT');f.deadT=0}
     else if(!roundOver)ko(f.foe,f,'RING OUT')}
-  if(W){for(const f of fighters)if(f!==P&&f.hp<=0&&!f.removed){f.deadT=(f.deadT===undefined?1.4:f.deadT)-dt;if(f.deadT<=0){f.removed=true;emit(chest(f),'#ffffff',12,3);removeFighter(f)}}fighters=fighters.filter(f=>!f.removed)}
+  if(W){for(const f of fighters)if(f!==P&&f.hp<=0&&!f.removed){if(f.deadT===undefined&&f.kit&&f.kit.onDeath){f.kit.onDeath(f);if(f.def.skeleton){f.deadT=.25;f.rig.root.visible=false}}f.deadT=(f.deadT===undefined?1.4:f.deadT)-dt;if(f.deadT<=0){f.removed=true;emit(chest(f),'#ffffff',12,3);removeFighter(f)}}fighters=fighters.filter(f=>!f.removed)}
   if(!roundOver&&!W&&!TR){roundTime-=dt;if(roundTime<=0){roundTime=0;const pr=P.hp/P.maxhp,er=E.hp/E.maxhp;ko(null,pr>=er?E:P,'TIME')}}
   if(shake>0)shake=Math.max(0,shake-rdt*1.6);
   for(const f of fighters)animate(f,dt*f.ts);
@@ -3620,7 +3680,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=92;
+const NET_VER=93;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
