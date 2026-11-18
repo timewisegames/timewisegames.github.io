@@ -1476,7 +1476,7 @@ function teleWind(f,kind,dur){const col=teleCol(f);f.flash=dur;f.flashCol=col;co
   emit(chest(f),col,6,1.2,-.2)}
 function windup(f,kind,go){teleWind(f,kind,WIND);
   special(f,{dur:WIND,pose:kind==='melee'?'atkwind':'windup',tele:kind,
-    update(f,dt){const k=Math.pow(.03,dt);f.vel.x*=k;f.vel.z*=k;const o=f.foe;if(o&&(f.isP||!o.invis))f.yaw=turnTo(f.yaw,Math.atan2(o.pos.x-f.pos.x,o.pos.z-f.pos.z),8*dt)},
+    update(f,dt){const k=Math.pow(.03,dt);f.vel.x*=k;f.vel.z*=k;const o=f.foe;if(o&&(f.isP||!o.invis)){const tp=facePos(f)||o.pos;f.yaw=turnTo(f.yaw,Math.atan2(tp.x-f.pos.x,tp.z-f.pos.z),8*dt)}},
     end(f,s,c){f.flash=0;f.flashCol=null;if(!c)go(f)}})}
 function canPerfect(t){return t.isP||t.human||Math.random()<.1+(t.lvl||0)*.2}
 function perfectParry(tgt,src,o,dir){
@@ -2561,11 +2561,14 @@ function updWindWalls(dt){for(const w of windWalls){w.t-=dt;const perp=V(-w.d.z,
   windWalls=windWalls.filter(w=>w.t>0)}
 function spawnShade(owner,pos,delay){const rig=buildRig(owner.def);rig.all.forEach(m=>{m.transparent=true;m.opacity=.85;m.color.set('#1b1230')});rig.aura.visible=false;rig.root.position.set(pos.x,-2.2,pos.z);world.add(rig.root);
   const eye=new T.MeshBasicMaterial({color:'#c9b3ff'});[-1,1].forEach(q=>add(rig.head,sph(.03,8,6),eye,q*.072,.012,.205).castShadow=false);
-  shades.push({rig,pos:pos.clone(),owner,t:-delay,atk:.3,swing:0,dead:false,life:3.5,hp:14})}
+  shades.push({rig,pos:pos.clone(),owner,t:-delay,atk:.3,swing:0,dead:false,life:3.5,hp:10})}
 // shadow doubles can be struck down
 function shadeHittable(s){return !s.dead&&s.t>=.3&&s.t<=s.life}
 function hitShade(s,dmg,by,dir){if(!shadeHittable(s))return;s.hp-=dmg;s.atk=Math.max(s.atk,.45);s.flinch=.18;const c=V(s.pos.x,1.1,s.pos.z);emit(c,'#5a3a8a',8,3,.2);if(dir)s.pos.addScaledVector(dir,.35);snd('block');
   if(s.hp<=0){s.dead=true;world.remove(s.rig.root);fxFlash(c,'#c9b3ff',1.8,.3);emit(c,'#3a2560',24,5,.4,1.2);emit(c,'#c9b3ff',10,4,-.2);fxRing(s.pos,'#7a4bd8',.3,1.8,.35);if(by&&by.def)float(s.owner,'SHADOW BROKEN','#c9b3ff');snd('parry')}}
+// what a fighter should turn to: a nearby shadow double beats a foe hiding underground or standing further away
+function nearShade(f,maxD){let b=null,bd=maxD;for(const s of shades){if(!shadeHittable(s)||s.owner.team===f.team)continue;const d=hdist(f.pos,s.pos);if(d<bd){bd=d;b=s}}return b}
+function facePos(f){const o=f.foe;if(!o)return null;const sh=nearShade(f,4.5);if(sh&&(o.under||o.phase||hdist(f.pos,sh.pos)+.6<hdist(f.pos,o.pos)))return sh.pos;return o.pos}
 function shadesHitArc(f,range,dmg){const fw=fwd(f);for(const s of shades){if(!shadeHittable(s)||s.owner.team===f.team)continue;const d=dirTo(f.pos,s.pos);if(hdist(f.pos,s.pos)<range*f.size+.45&&fw.dot(d)>.3)hitShade(s,dmg,f,d)}}
 function updShades(dt){for(const s of shades){s.t+=dt;if(s.t<0)continue;const r=s.rig;
   if(s.owner.hp<=0&&s.t<s.life)s.t=s.life;
@@ -2908,8 +2911,8 @@ function freeControl(f,dt,inp){
   const o=f.foe;
   const canSee=!o.invis;
   const mv=inp.mv||V();const ml=Math.min(1,mv.length());
-  const tYaw=Math.atan2(o.pos.x-f.pos.x,o.pos.z-f.pos.z);
-  if(canSee)f.yaw=turnTo(f.yaw,tYaw,12*dt);else if(ml>.1)f.yaw=turnTo(f.yaw,Math.atan2(mv.x,mv.z),12*dt);
+  const fp=facePos(f)||o.pos;const tYaw=Math.atan2(fp.x-f.pos.x,fp.z-f.pos.z);
+  if(canSee||fp!==o.pos)f.yaw=turnTo(f.yaw,tYaw,12*dt);else if(ml>.1)f.yaw=turnTo(f.yaw,Math.atan2(mv.x,mv.z),12*dt);
   if(inp.block&&f.grounded){if(f.st!=='block'){f.st='block';f.blockT=0}f.blockT+=dt;f.vel.x*=Math.pow(.001,dt);f.vel.z*=Math.pow(.001,dt);return}
   f.st='free';
   const rooted=f.status.root>0;
@@ -3015,7 +3018,7 @@ function aiThink(f,dt){
     const h={};
     const seen=!o.invis||o.dustT>1||(o.shim||0)>.5||Math.random()<.15+L*.2;
     if(seen)a.last=o.pos.clone();
-    if(a.bait&&a.bait.dead)a.bait=null;const tp=a.bait?a.bait.pos:(a.last||o.pos);
+    if(a.bait&&a.bait.dead)a.bait=null;if(!a.bait){const sh=nearShade(f,5);if(sh&&(o.under||o.phase||Math.random()<.5))a.bait=sh}else if(shades.includes(a.bait)&&!shadeHittable(a.bait))a.bait=null;const tp=a.bait?a.bait.pos:(a.last||o.pos);
     const d=dirTo(f.pos,tp),dist=hdist(f.pos,tp);
     if(Math.random()<.06)a.side*=-1;
     const side=V(-d.z,0,d.x).multiplyScalar(a.side);
@@ -3616,7 +3619,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=89;
+const NET_VER=90;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
