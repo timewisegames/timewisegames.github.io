@@ -1257,7 +1257,7 @@ function damage(src,tgt,amt,o){
   return amt;
 }
 function hurtFlash(heavy,who){const el=$('hurt');el.style.transition='none';el.style.opacity=heavy?1:.6;void el.offsetWidth;el.style.transition='opacity .45s';el.style.opacity=0}
-function aoe(src,pos,r,dmg,o){o=o||{};let hit=false;for(const t of fighters){if((src&&t.team===src.team)||t.hp<=0||t.removed)continue;if(hdist(t.pos,pos)<r+t.rad&&Math.abs(t.pos.y-(pos.y||0))<(o.h||2.2)){damage(src,t,dmg,Object.assign({dir:dirTo(pos,t.pos)},o));hit=true}}
+function aoe(src,pos,r,dmg,o){o=o||{};let hit=false;if(src&&!o.dot)for(const s of shades)if(shadeHittable(s)&&s.owner.team!==src.team&&hdist(s.pos,pos)<r+.45&&(pos.y||0)<3)hitShade(s,dmg,src,dirTo(pos,s.pos));for(const t of fighters){if((src&&t.team===src.team)||t.hp<=0||t.removed)continue;if(hdist(t.pos,pos)<r+t.rad&&Math.abs(t.pos.y-(pos.y||0))<(o.h||2.2)){damage(src,t,dmg,Object.assign({dir:dirTo(pos,t.pos)},o));hit=true}}
   if(o.breaks)for(const s of solids)if(!s.dead&&hdist(s.pos,pos)<r+s.r)hitSolid(s,o.breaks);
   if(o.burnVines){}
   return hit}
@@ -1266,6 +1266,7 @@ function meleeHit(f,range,dmg,o){
   for(const t of fighters){if(t.team===f.team||t.hp<=0||t.removed)continue;const d=dirTo(f.pos,t.pos),dist=hdist(f.pos,t.pos);
     if(dist<range*f.size+t.rad&&fw.dot(d)>.3&&Math.abs(t.pos.y-f.pos.y)<1.7*f.size)damage(f,t,dmg,Object.assign({dir:d,melee:true},o))}
   if(o.breaks)for(const s of solids){if(s.dead)continue;const ds=dirTo(f.pos,s.pos);if(hdist(f.pos,s.pos)<range*f.size+s.r&&fw.dot(ds)>.3)hitSolid(s,o.breaks)}
+  shadesHitArc(f,range,dmg);
 }
 
 /* ================= SOLIDS: pillars, walls, gongs ================= */
@@ -2409,7 +2410,7 @@ KITS.gloam={
   hud:f=>f.inShadow?'Hidden in shadow':'In the light',
   q:{n:'Shadow Step',d:'Sink into the floor and rise up right behind your foe. Your next hit deals +60%. Outside shadow it costs 25 energy.',cd:5,ai:[2,16],can:f=>f.inShadow||f.en>=25,run(f){if(!f.inShadow)f.en-=25;teleportFx(f);fxRing(f.pos,'#6b4bd8',.3,1.6,.35);f.under=true;f.phase=true;snd('dash');
     special(f,{dur:.4,kin:true,iframes:true,pose:'channel',update(f){f.vel.set(0,0,0)},end(f){f.under=false;f.phase=false;const o=f.foe;const b=fwd(o).multiplyScalar(-1.5);const p=o.pos.clone().add(b);p.y=Math.max(0,o.pos.y);clampPlat(p,PLAT_R-.7);f.pos.copy(p);f.vel.set(0,0,0);f.yaw=Math.atan2(o.pos.x-p.x,o.pos.z-p.z);f.riseT=.3;fxRing(p,'#a07bff',.3,1.8,.35);emit(V(p.x,.2,p.z),'#3a2560',18,4,-.5);f.ambush=2.2;f.iframes=.25}})}},
-  e:{n:'Umbral Uprising',d:'Sink into the floor and let three shadow doubles rise up around your foe and attack for 3.5 seconds. Nothing can hit you while you are underground. You surface behind your foe and your next hit deals 60% more.',cd:11,ai:[0,12],run(f){const o=f.foe;if(!o||o.hp<=0)return false;
+  e:{n:'Umbral Uprising',d:'Sink into the floor and let three shadow doubles rise up around your foe and attack for 3.5 seconds (they can be struck down). Nothing can hit you while you are underground. You surface behind your foe and your next hit deals 60% more.',cd:11,ai:[0,12],run(f){const o=f.foe;if(!o||o.hp<=0)return false;
     snd('boom');float(f,'UPRISING','#c9b3ff');fxRing(f.pos,'#6b4bd8',.3,2,.4);emit(chest(f),'#2a1840',20,3,-.3);
     const a0=rand(0,7);for(let i=0;i<3;i++){const a=a0+i*Math.PI*2/3;const p=clampPlat(V(o.pos.x+Math.cos(a)*2.6,0,o.pos.z+Math.sin(a)*2.6),PLAT_R-1);fxRing(p,'#6b4bd8',1.4,.6,.5+i*.12);spawnShade(f,p,.25+i*.12)}
     f.under=true;f.phase=true;
@@ -2560,11 +2561,18 @@ function updWindWalls(dt){for(const w of windWalls){w.t-=dt;const perp=V(-w.d.z,
   windWalls=windWalls.filter(w=>w.t>0)}
 function spawnShade(owner,pos,delay){const rig=buildRig(owner.def);rig.all.forEach(m=>{m.transparent=true;m.opacity=.85;m.color.set('#1b1230')});rig.aura.visible=false;rig.root.position.set(pos.x,-2.2,pos.z);world.add(rig.root);
   const eye=new T.MeshBasicMaterial({color:'#c9b3ff'});[-1,1].forEach(q=>add(rig.head,sph(.03,8,6),eye,q*.072,.012,.205).castShadow=false);
-  shades.push({rig,pos:pos.clone(),owner,t:-delay,atk:.3,swing:0,dead:false,life:3.5})}
+  shades.push({rig,pos:pos.clone(),owner,t:-delay,atk:.3,swing:0,dead:false,life:3.5,hp:14})}
+// shadow doubles can be struck down
+function shadeHittable(s){return !s.dead&&s.t>=.3&&s.t<=s.life}
+function hitShade(s,dmg,by,dir){if(!shadeHittable(s))return;s.hp-=dmg;s.atk=Math.max(s.atk,.45);s.flinch=.18;const c=V(s.pos.x,1.1,s.pos.z);emit(c,'#5a3a8a',8,3,.2);if(dir)s.pos.addScaledVector(dir,.35);snd('block');
+  if(s.hp<=0){s.dead=true;world.remove(s.rig.root);fxFlash(c,'#c9b3ff',1.8,.3);emit(c,'#3a2560',24,5,.4,1.2);emit(c,'#c9b3ff',10,4,-.2);fxRing(s.pos,'#7a4bd8',.3,1.8,.35);if(by&&by.def)float(s.owner,'SHADOW BROKEN','#c9b3ff');snd('parry')}}
+function shadesHitArc(f,range,dmg){const fw=fwd(f);for(const s of shades){if(!shadeHittable(s)||s.owner.team===f.team)continue;const d=dirTo(f.pos,s.pos);if(hdist(f.pos,s.pos)<range*f.size+.45&&fw.dot(d)>.3)hitShade(s,dmg,f,d)}}
 function updShades(dt){for(const s of shades){s.t+=dt;if(s.t<0)continue;const r=s.rig;
   if(s.owner.hp<=0&&s.t<s.life)s.t=s.life;
   if(s.t<.45){r.root.position.set(s.pos.x,lerp(-2.2,0,1-Math.pow(1-s.t/.45,3)),s.pos.z);if(Math.random()<.7*FR)emit(V(s.pos.x+rand(-.5,.5),.1,s.pos.z+rand(-.5,.5)),'#5a3a8a',1,2.2,-.6);continue}
   if(s.t>s.life){const k=Math.min(1,(s.t-s.life)/.45);r.root.position.y=-2.2*k*k;if(Math.random()<.5*FR)emit(V(s.pos.x,.1,s.pos.z),'#3a2560',1,1.5,-.5);if(k>=1){s.dead=true;world.remove(r.root)}continue}
+  for(const q of projs)if(!q.dead&&q.owner&&q.owner.team!==s.owner.team&&hdist(q.pos,s.pos)<.75&&q.pos.y<2.4){q.dead=true;hitShade(s,q.dmg||6,q.owner,q.vel&&q.vel.lengthSq()>0?q.vel.clone().setY(0).normalize():null);if(s.dead)break}
+  if(s.dead)continue;if(s.flinch>0){s.flinch-=dt;r.torso.rotation.x=-.35;r.root.position.set(s.pos.x,0,s.pos.z);continue}
   let o=null,bd=1e9;for(const t of foesOf(s.owner)){const d=hdist(t.pos,s.pos);if(d<bd){bd=d;o=t}}
   if(o){const d=dirTo(s.pos,o.pos),dist=bd;r.root.rotation.y=Math.atan2(d.x,d.z);s.atk-=dt;
     if(dist>1.5){s.pos.addScaledVector(d,Math.min(dist-1.4,7*dt));s.wk=(s.wk||0)+dt*12;const ph=Math.sin(s.wk);r.legs[0].rotation.x=ph*.8;r.legs[1].rotation.x=-ph*.8;r.shins[0].rotation.x=Math.max(0,-ph)*.9;r.shins[1].rotation.x=Math.max(0,ph)*.9}
@@ -2794,6 +2802,7 @@ function chuckAnim(f,r,st,dt,t){const C=r.weapon.userData.chuck,piv=C.piv;dt=Mat
   const cl=C.chain.scale.y*.34;const nl=cl+(L-cl)*Math.min(1,dt*20);C.chain.scale.y=nl/.34;C.hb.position.y=nl}
 function reachStrike(f){const R=REACH[f.def.id],d=fwd(f),o=chest(f);
   for(const t of foesOf(f)){const v=chest(t).sub(o);const pr=v.dot(d);if(pr<0||pr>R.len+t.rad)continue;const perp=v.clone().addScaledVector(d,-pr);perp.y*=.6;if(perp.length()<R.w+t.rad){damage(f,t,R.dmg,{dir:d.clone(),kb:R.kb,up:R.up,heavy:true,melee:pr<2.5,el:R.el});if(R.chill&&!(t.status.frozen>0)){setStatus(t,'chill',2);t.chillAt=clock}}}
+  for(const s of shades){if(!shadeHittable(s)||s.owner.team===f.team)continue;const v=V(s.pos.x-f.pos.x,0,s.pos.z-f.pos.z);const pr=v.dot(d);if(pr>0&&pr<R.len+.45&&v.clone().addScaledVector(d,-pr).length()<R.w+.45)hitShade(s,R.dmg,f,d)}
   for(const s of solids){if(s.dead)continue;const v=V(s.pos.x-f.pos.x,0,s.pos.z-f.pos.z);const pr=v.dot(d);if(pr>0&&pr<R.len&&v.clone().addScaledVector(d,-pr).length()<R.w+s.r)hitSolid(s,1)}
   const q=new T.Quaternion().setFromUnitVectors(V(0,1,0),d);
   if(R.kind==='chuck'){f.chuckOut=.42;for(let i=0;i<3;i++)later(i*.07,()=>fxBolt(o.clone(),o.clone().addScaledVector(d,R.len*(.5+i*.25)),'#cfe9ff',.15));
@@ -3607,7 +3616,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=88;
+const NET_VER=89;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
@@ -3965,7 +3974,7 @@ function endMatch(won){
   }
   saveProg();syncTitleStats();show('m-result');
 }
-function tipFor(d){const tips={prism:'Prism\'s shards each carry a different element. Close the gap; her fan is weakest point-blank.',doppel:'Doppel copies your ultimate. Spend yours first, and attack the real one: the fake shatters if you hit it.',vane:'Vane hits hard but turns slowly. Bait Cataclysm, then punish while he lands.',cinder:'Cinder burns the floor. Fight away from fire patches and punish after Meteor Dive lands.',tempest:'Stay dry. Lightning hits much harder on wet, icy or metal targets.',basalt:'Basalt is slow. Circle him and dash out of his fissure line.',rime:'Rime freezes chilled targets. Break line of sight after the first shard hits.',tide:'Avoid the puddles. They heal Tidecaller and carry lightning.',gloam:'Gloam hides in pillar shadows. Heavy hits can shatter the pillars he uses. When his shadow doubles rise, block and back away. They fade after a few seconds.',orbit:'Dash away from slow bubbles, and stay grounded when Orbit has stones up.',bramble:'Watch the floor for vine warnings and pods. Vines catch a spinning vortex, so do not spin through them. When a beanstalk shoots up, move: Bramble is about to leap down onto you.',dash:'Block, then counter. Dash phases through projectiles, so use melee.',anvil:'Iron Anvil shrugs off hits. Wait for flesh form or use lightning.',echo:'Do not feed Echo-Glass elements. Melee pressure keeps her shield empty.',cipher:'Cipher dodges the first melee hit every 7 seconds. Bait it with a light slash, then commit.',murk:'Clear Murk smoke with a vortex or stay out of it. He is far harder to hit inside.',locust:'Locust flings foes far. Stay out of his cyclone and block his Slipstream dash.',aurel:'When Aurel vanishes, watch the floor for glints and keep moving so the first strike misses.'};return 'Tip: '+(tips[d.id]||'Block right before a hit lands to parry.')}
+function tipFor(d){const tips={prism:'Prism\'s shards each carry a different element. Close the gap; her fan is weakest point-blank.',doppel:'Doppel copies your ultimate. Spend yours first, and attack the real one: the fake shatters if you hit it.',vane:'Vane hits hard but turns slowly. Bait Cataclysm, then punish while he lands.',cinder:'Cinder burns the floor. Fight away from fire patches and punish after Meteor Dive lands.',tempest:'Stay dry. Lightning hits much harder on wet, icy or metal targets.',basalt:'Basalt is slow. Circle him and dash out of his fissure line.',rime:'Rime freezes chilled targets. Break line of sight after the first shard hits.',tide:'Avoid the puddles. They heal Tidecaller and carry lightning.',gloam:'Gloam hides in pillar shadows. Heavy hits can shatter the pillars he uses. When his shadow doubles rise, cut them down: two slashes or one heavy breaks each one.',orbit:'Dash away from slow bubbles, and stay grounded when Orbit has stones up.',bramble:'Watch the floor for vine warnings and pods. Vines catch a spinning vortex, so do not spin through them. When a beanstalk shoots up, move: Bramble is about to leap down onto you.',dash:'Block, then counter. Dash phases through projectiles, so use melee.',anvil:'Iron Anvil shrugs off hits. Wait for flesh form or use lightning.',echo:'Do not feed Echo-Glass elements. Melee pressure keeps her shield empty.',cipher:'Cipher dodges the first melee hit every 7 seconds. Bait it with a light slash, then commit.',murk:'Clear Murk smoke with a vortex or stay out of it. He is far harder to hit inside.',locust:'Locust flings foes far. Stay out of his cyclone and block his Slipstream dash.',aurel:'When Aurel vanishes, watch the floor for glints and keep moving so the first strike misses.'};return 'Tip: '+(tips[d.id]||'Block right before a hit lands to parry.')}
 function togglePause(){if(match&&match.mode==='online'&&NET.live){NET.menu=!NET.menu;$('p-cam').textContent='Camera: '+CAM_NAMES[camMode];$('p-switch').hidden=true;show(NET.menu?'m-pause':null);$('hud').hidden=false;return}if(roundOver)return;paused=!paused;$('p-cam').textContent='Camera: '+CAM_NAMES[camMode];$('p-switch').hidden=!(match&&match.mode==='training');show(paused?'m-pause':null);$('hud').hidden=false}
 $('p-resume').onclick=()=>togglePause();
 $('p-cam').onclick=()=>{cycleCam();snd('ui')};
