@@ -1151,7 +1151,18 @@ function buildWeapon(d,w,o,m,rune){
     case 'orb':{const ob=add(w,sph(.14,12,10),B(el.g),0,.12,0);ob.castShadow=false;add(o,sph(.1,10,8),B(el.c),0,0,0).castShadow=false;break}
     case 'wstaff':add(w,cyl(.035,.045,1.6,6),m.wood,0,.25,0);add(w,sph(.12,8,6),M('#7fd65a'),0,1.08,0);add(w,cone(.06,.2,5),M('#c6f07a'),.08,1.18,0,0,0,-.6);break;
     case 'tonfa':[w,o].forEach((g,i)=>{add(g,cyl(.035,.035,.62,6),M('#3a2414'),0,i?0:.1,i?.1:0,i?Math.PI/2:0);add(g,cyl(.03,.03,.16,6),M('#ffe36a'),0,0,0)});break;
-    case 'gloves':[w.parent,o].forEach((h,i)=>{const gm=M('#b8442a'),dk=M('#5a5f68');const g=new T.Group();h.add(g);const ball=add(g,sph(.22,14,10),gm,0,-.08,.02);ball.scale.set(1,1.15,1.05);add(g,sph(.09,10,8),gm,(i?1:-1)*.16,-.02,.08);add(g,cyl(.16,.15,.16,12),dk,0,.12,0);for(let k=0;k<6;k++){const a=k/6*Math.PI*2;add(g,sph(.025,6,4),M('#e0c070'),Math.cos(a)*.16,.12,Math.sin(a)*.16)}add(g,box(.3,.04,.05),B('#ff8a3d'),0,-.04,.21).castShadow=false});break;
+    case 'gloves':[w.parent,o].forEach((h,i)=>{const gm=M('#b8442a'),gd=M('#8e3220'),dk=M('#5a5f68'),gold=M('#e0c070');const g=new T.Group();h.add(g);const q=i?1:-1;
+      // padded back of the hand and palm, same bulk as the old mitt
+      const back=add(g,sph(.2,16,12),gm,0,-.03,-.03);back.scale.set(1.08,1.02,.92);const palm=add(g,sph(.15,14,10),gd,0,-.12,-.05);palm.scale.set(1.05,.72,.8);
+      // four curled fingers with knuckles and joint grooves
+      [-.135,-.045,.045,.135].forEach((x,k)=>{const L=k===1||k===2?1.08:.96,c=new T.CatmullRomCurve3([V(x,.05,.13),V(x,.04*L,.23*L),V(x,-.08*L,.29*L),V(x,-.2*L,.25*L),V(x,-.27*L,.13)]);
+        const fm=new T.Mesh(taperTube(c,22,10,.058,.05),gm);fm.castShadow=true;g.add(fm);{const tp=c.getPointAt(1);add(g,sph(.05,10,8),gm,tp.x,tp.y,tp.z);const bp=c.getPointAt(0);add(g,sph(.058,10,8),gm,bp.x,bp.y,bp.z)}add(g,sph(.052,10,8),gd,x,.08,.15);
+        for(const u of [.38,.7]){const p=c.getPointAt(u),tn=c.getTangentAt(u),j=new T.Mesh(tor(.058,.009,5,14),gd);j.position.copy(p);j.quaternion.setFromUnitVectors(V(0,0,1),tn);g.add(j)}});
+      // thumb wrapped across the front of the fist
+      {const c=new T.CatmullRomCurve3([V(q*.19,-.04,.02),V(q*.21,-.1,.14),V(q*.12,-.15,.27),V(q*.02,-.14,.31)]);const tm=new T.Mesh(taperTube(c,18,10,.068,.054),gm);tm.castShadow=true;g.add(tm);{const tp=c.getPointAt(1);add(g,sph(.054,10,8),gm,tp.x,tp.y,tp.z)}const p=c.getPointAt(.55),tn=c.getTangentAt(.55),j=new T.Mesh(tor(.066,.01,5,14),gd);j.position.copy(p);j.quaternion.setFromUnitVectors(V(0,0,1),tn);g.add(j)}
+      // cuff, studs and glowing knuckle strip
+      add(g,cyl(.16,.15,.16,12),dk,0,.12,0);for(let k=0;k<6;k++){const a=k/6*Math.PI*2;add(g,sph(.025,6,4),gold,Math.cos(a)*.16,.12,Math.sin(a)*.16)}
+      add(g,box(.32,.03,.03),B('#ff8a3d'),0,.11,.17).castShadow=false});break;
     case 'hammer':add(w,cyl(.04,.045,1.1,6),m.wood,0,.3,0);add(w,box(.42,.28,.28),M('#7c838e'),0,.88,0);add(w,box(.44,.06,.3),B(el.c),0,.88,0).castShadow=false;break;
     case 'hitknife':{const k=new T.Group();k.position.y=-.02;w.add(k);const steel=TM('#c9ccd4'),grip=TM('#141418');add(k,cyl(.026,.03,.15,8),grip,0,0,0);for(let i=0;i<3;i++)add(k,tor(.03,.006,4,10),TM('#2a2a30'),0,-.04+i*.04,0,Math.PI/2);add(k,box(.08,.016,.04),grip,0,.085,0);add(k,cyl(.02,.02,.02,8),grip,0,-.085,0);
       const bl=add(k,box(.05,.27,.009),steel,0,.225,0);const tip=add(k,cone(.025,.08,4),steel,.0,.395,0,0,Math.PI/4,0);tip.scale.set(1,1,.18);add(k,box(.012,.2,.011),TM('#7c838e'),-.014,.21,0)}break;
@@ -3736,7 +3747,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=98;
+const NET_VER=99;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
