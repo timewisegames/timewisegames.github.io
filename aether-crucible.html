@@ -1233,7 +1233,8 @@ function damage(src,tgt,amt,o){
   amt*=mult;
   if(!o.dot&&tgt.shieldHp>0){const ab=Math.min(tgt.shieldHp,amt);tgt.shieldHp-=ab;amt-=ab;if(ab>0)float(tgt,'ABSORBED','#fff2a8');if(tgt.shieldHp<=0){tgt.shieldT=0;fxFlash(chest(tgt),'#fff2a8',1.2,.25)}}
   if(!o.dot&&!blocked&&tgt.def.id==='aurel'&&o.proj){amt*=.7;const c=chest(tgt);['#ff5a5a','#ffb35a','#ffe96a','#7fe07f','#6fb6ff','#b07bff'].forEach(col=>emit(c,col,3,5));float(tgt,'REFRACTED','#fff2a8');for(const t of foesOf(tgt))if(hdist(t.pos,tgt.pos)<3.5)setStatus(t,'blind',.6)}
-  if(tgt.def&&tgt.def.minion&&src&&src.def&&!src.def.minion&&(src.st==='vortex'||src.ultT>0))amt*=2.5; // wave grunts crumble to ultimates and tornadoes
+  if(tgt.def&&tgt.def.minion&&src&&src.def&&!src.def.minion&&(src.st==='vortex'||src.ultT>0))amt*=2.5;
+  if(src&&src.def&&src.def.minion&&tgt.def&&!tgt.def.minion&&tgt.st==='vortex')amt*=.25; // wave grunts crumble to ultimates and tornadoes
   if(!(netGuest()&&(tgt===P||tgt===E)))tgt.hp=Math.max(0,tgt.hp-amt);if(src&&src!==tgt&&!o.dot)tgt.lastHitBy=src;
   if(tgt.veil>0&&!o.dot&&!blocked&&src!==tgt)veilBreak(tgt);
   if(relic&&relic.holder===tgt&&!o.dot&&!blocked&&amt>=3&&src)dropRelic(dirTo(src.pos,tgt.pos));
@@ -1510,7 +1511,7 @@ function vortexUpdate(f,dt,inp){
   {// radial gravity well: weak at the rim, strong near the core, with a tangential swirl
   const R=6*f.size,K={earth:5.5,wind:12.5,fire:8.5,storm:8.5,ice:8}[el]||8;
   for(const t of foesOf(f)){if(t.status.zerog>0||t.metal)continue;const dd=hdist(t.pos,f.pos);if(dd>R||dd<.05)continue;
-    const n=dirTo(t.pos,f.pos),q=1-dd/R,g=K*(.35+q*q*1.6)*(t.st==='block'?.6:1);t.vel.x+=(n.x-n.z*.38)*g*dt;t.vel.z+=(n.z+n.x*.38)*g*dt}
+    const n=dirTo(t.pos,f.pos),q=1-dd/R,g=K*(.35+q*q*1.6)*(t.st==='block'?.6:1)*(t.def.minion?2:1);t.vel.x+=(n.x-n.z*.38)*g*dt;t.vel.z+=(n.z+n.x*.38)*g*dt}
   for(const db of debris){if(db.state==='orbit')continue;const dd=hdist(db.pos,f.pos);if(dd>R+1.5)continue;const q=1-dd/(R+1.5);
     const nx=(f.pos.x-db.pos.x)/(dd||1),nz=(f.pos.z-db.pos.z)/(dd||1);
     if(dd>1.5){db.vel.x+=(nx*16-nz*9)*q*dt;db.vel.z+=(nz*16+nx*9)*q*dt;if(db.pos.y<.5)db.vel.y=Math.max(db.vel.y,2.5*q)}
@@ -1520,7 +1521,7 @@ function vortexUpdate(f,dt,inp){
   for(const sh of shades){if(!shadeHittable(sh)||sh.owner.team===f.team)continue;const sd=hdist(sh.pos,f.pos);if(sd<1.8*f.size+.5){hitShade(sh,999,f,dirTo(f.pos,sh.pos));if(sh.dead)emit(V(sh.pos.x,1.2,sh.pos.z),EL[f.mirrorEl||f.def.el].c,14,6,-.2)}else if(sd<4*f.size){const pd=dirTo(sh.pos,f.pos);sh.pos.addScaledVector(pd,Math.min(sd,3.5*dt))}}
   f.vt-=dt;f.vp-=dt;
   const C={fire:{dmg:4,kb:2,up:1},storm:{dmg:3,kb:2,up:1},ice:{dmg:3,kb:1.5,up:.5},earth:{dmg:6,kb:12,up:4},wind:{dmg:3,kb:7,up:3}}[el];
-  if(f.vt<=0){let any=false;for(const t of foesOf(f))if(hdist(f.pos,t.pos)<1.6*f.size+t.rad&&Math.abs(t.pos.y-f.pos.y)<2.6){any=true;damage(f,t,C.dmg,{dir:dirTo(f.pos,t.pos),kb:C.kb,up:C.up,noStun:true});if(el==='fire')setStatus(t,'burn',1.5);if(el==='ice'&&!(t.status.frozen>0)){setStatus(t,'chill',1.2);t.chillAt=clock}if(el==='storm'&&(f.vStrikes||0)<2&&clock>(f.vStrikeAt||0)){f.vStrikes=(f.vStrikes||0)+1;f.vStrikeAt=clock+.7;strike(f,t.pos.clone(),.2,8);float(t,'THUNDER '+f.vStrikes+'/2','#bfe4ff')}}if(any)f.vt=el==='earth'?.55:.32}
+  if(f.vt<=0){let any=false;for(const t of foesOf(f))if(hdist(f.pos,t.pos)<(t.def.minion?2.7:1.6)*f.size+t.rad&&Math.abs(t.pos.y-f.pos.y)<2.6){any=true;damage(f,t,C.dmg,{dir:dirTo(f.pos,t.pos),kb:C.kb,up:C.up,noStun:!t.def.minion,guardBreak:!!t.def.minion});if(el==='fire')setStatus(t,'burn',1.5);if(el==='ice'&&!(t.status.frozen>0)){setStatus(t,'chill',1.2);t.chillAt=clock}if(el==='storm'&&(f.vStrikes||0)<2&&clock>(f.vStrikeAt||0)){f.vStrikes=(f.vStrikes||0)+1;f.vStrikeAt=clock+.7;strike(f,t.pos.clone(),.2,8);float(t,'THUNDER '+f.vStrikes+'/2','#bfe4ff')}}if(any)f.vt=el==='earth'?.55:.32}
   if(el==='earth')for(const s of solids)if(!s.dead&&hdist(s.pos,f.pos)<2.4+s.r)hitSolid(s,5);
   for(const h of hazards)if((h.type==='smoke'||h.type==='gas')&&hdist(h.pos,f.pos)<3)killHz(h);
   if(f.vp<=0){
@@ -3699,7 +3700,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=95;
+const NET_VER=96;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
