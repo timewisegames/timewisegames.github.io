@@ -3442,7 +3442,7 @@ function tierText(d,L){const e=EL[d.el].n.toLowerCase(),st=`+${6*(L-1)}% health,
    `${st} Your belt and wrist wraps now glow with ${e} energy.`,
    `${st} Forged shoulder guards with ${e} trim, and your clan emblem burns on your back. Your strikes throw off ${e} sparks.`,
    `${st} Three ${e} spirits orbit around you and a glowing sigil turns beneath your feet.`,
-   `${st} Master Relic Weapon blazing with ${e} light and a golden trail, and a crown of ${e} light floats above your head.`][L]}
+   `${st} Master Relic Weapon blazing with ${e} light and a golden trail, and an aura of ${e} light rises around you.`][L]}
 function applyTier(r,d,L){if(!r||L<2||r.tier>=L)return;r.tier=L;const c=EL[d.el].c,g=EL[d.el].g||c;
   const glow=new T.MeshBasicMaterial({color:c}),glow2=new T.MeshBasicMaterial({color:g}),gold=new T.MeshToonMaterial({color:'#f2c14e',gradientMap:grad}),steel=new T.MeshToonMaterial({color:'#5a606c',gradientMap:grad});[glow,glow2,gold,steel].forEach(m=>r.all.push(m));
   const belt=new T.Mesh(tor(.27,.03,6,28),glow);belt.rotation.x=Math.PI/2;belt.position.y=.1;r.torso.add(belt);
@@ -3456,8 +3456,7 @@ function applyTier(r,d,L){if(!r||L<2||r.tier>=L)return;r.tier=L;const c=EL[d.el]
   if(L>=4){const orb=new T.Group();orb.position.y=1.15;r.body.add(orb);for(let i=0;i<3;i++){const m=new T.Mesh(new T.OctahedronGeometry(.11),i%2?glow2:glow);const a=i/3*TAU;m.position.set(Math.cos(a)*.78,0,Math.sin(a)*.78);m.userData.a=a;orb.add(m);for(let k=1;k<4;k++){const tr=new T.Mesh(sph(.045-k*.009,6,5),glow2);const b=a-k*.22;tr.position.set(Math.cos(b)*.78,0,Math.sin(b)*.78);orb.add(tr)}}r.tierOrbit=orb;
     const sig=new T.Group();sig.position.y=.035;sig.rotation.x=-Math.PI/2;r.body.add(sig);const sm=new T.MeshBasicMaterial({color:c,transparent:true,opacity:.75,depthWrite:false,side:T.DoubleSide});r.all.push(sm);
     sig.add(new T.Mesh(new T.RingGeometry(.78,.84,6),sm));sig.add(new T.Mesh(new T.RingGeometry(.58,.62,48),sm));for(let i=0;i<6;i++){const a=i/6*TAU,t=new T.Mesh(new T.CircleGeometry(.06,3),sm);t.position.set(Math.cos(a)*.7,Math.sin(a)*.7,0);t.rotation.z=a;sig.add(t)}r.tierSigil=sig}
-  if(L>=5){const cr=new T.Group();cr.position.y=.44;cr.rotation.x=-.12;r.head.add(cr);const ring=new T.Mesh(tor(.21,.022,6,28),gold);ring.rotation.x=Math.PI/2;cr.add(ring);const ring2=new T.Mesh(tor(.24,.012,5,28),glow);ring2.rotation.x=Math.PI/2;cr.add(ring2);
-    for(let i=0;i<7;i++){const a=i/7*TAU,sp=new T.Mesh(cone(.03,.16,5),i%2?glow:gold);sp.position.set(Math.cos(a)*.21,.08,Math.sin(a)*.21);cr.add(sp)}r.tierCrown=cr;
+  if(L>=5){
     r.torso.traverse(o=>{if(o.isMesh&&o.material===steel)o.material=gold});
     const bm=new T.MeshBasicMaterial({color:c,transparent:true,opacity:.12,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending});const beam=new T.Mesh(new T.CylinderGeometry(.62,.85,2.6,24,1,true),bm);beam.geometry.userData.own=true;beam.position.y=1.3;r.body.add(beam);r.tierBeam=beam}}
 function tierAnim(f,r,dt,st){if(r.tierOrbit){r.tierOrbit.rotation.y+=dt*1.7;r.tierOrbit.children.forEach((m,i)=>{m.rotation.y+=dt*3});r.tierOrbit.position.y=1.15+Math.sin(clock*2.2)*.08}
@@ -3737,7 +3736,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=97;
+const NET_VER=98;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
