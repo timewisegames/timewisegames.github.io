@@ -3787,7 +3787,7 @@ function hud(){
 
 
 /* ================= ONLINE 1v1 (host-authoritative, synced through the claude.ai room) ================= */
-const NET_VER=106;
+const NET_VER=107;
 const NET={avail:null,tr:null,role:null,code:'',stage:'off',live:false,menu:false,pick:null,map:'spire',peer:null,peerP:null,lastRx:0,
   out:{},lastTx:0,cnt:{},rc:{},rcIn:{},evs:[],evId:0,evSeen:0,go:0,goSeen:0,rtt:120,peerT:0,peerTAt:0,snap:null,snapN:0,snapSeen:0,seed:1,err:'',ended:false,buf:[],off:null,jit:0,D:60,rtc:null,p2p:false,p2pRetry:0,p2pTries:0,lastPeerT:0,lastRoomTx:0};
 const NET_KEYS=['jump','dash','atk','heavy','q','e','z','x','ult'];
@@ -4475,7 +4475,8 @@ const SITES=[
   {id:'emberShrine',x:-38,z:-588,r:24,name:'Ember Shrine',area:'Ember Canyon'},
   {id:'stormCamp',x:607,z:-509,r:20,name:'Raider Hideout',area:'Cliff Road'},
   {id:'stormShrine',x:664,z:-748,r:22,name:'Storm Shrine',area:'Stormreach Cliffs'},
-  {id:'iron',x:304,z:668,r:26,name:'Iron Pass Gate',area:'Iron Pass'}];
+  {id:'iron',x:304,z:668,r:26,name:'Iron Pass Gate',area:'Iron Pass'},
+  {id:'cabin',x:-672,z:536,r:16,name:'Lakeside Cabin',area:'Lake Mere'}];
 SITES.forEach(t=>t.h=Math.max(baseH(t.x,t.z),WATER+4));
 function townFlat(x,z,h){for(const t of TOWNS){const d=Math.hypot(x-t.x,z-t.z);const k=sm(t.r+60,t.r,d);if(k>0)h=lerp(h,t.h,k)}for(const t of SITES){const d=Math.hypot(x-t.x,z-t.z);const k=sm(t.r+35,t.r,d);if(k>0)h=lerp(h,t.h,k)}return h}
 // roads (polylines, densified)
@@ -4572,6 +4573,15 @@ function house(x,z,yaw,o){o=Object.assign({w:8,d:7,fl:1,wall:'#e8dcc4',roof:'#8a
   addSolid({type:'box',x,z,hw:o.w/2+.15,hd:o.d/2+.15,yaw});return g}
 function noticeBoard(x,z,yaw){const g=new T.Group(),y=groundAt(x,z);g.position.set(x,y,z);g.rotation.y=yaw;scene.add(g);[-1,1].forEach(q=>mesh(new T.BoxGeometry(.14,2.3,.14),mat('#6b4a2e'),q*1.05,1.15,0,0,g));mesh(new T.BoxGeometry(2.3,1.3,.1),mat('#8a6a44'),0,1.6,0,0,g);mesh(new T.BoxGeometry(2.5,.12,.3),mat('#5a3a22'),0,2.32,0,0,g);
   for(let i=0;i<5;i++){const p=mesh(new T.BoxGeometry(.42,.52,.01),mat(['#f4ead2','#e8dcc4','#fff6dc'][i%3]),-.8+i*.4,1.6+(i%2?.18:-.18),.06,0,g);p.rotation.z=rand(-.12,.12)}const s=mesh(new T.BoxGeometry(1.6,.32,.05),new T.MeshLambertMaterial({map:signTex('JOBS','#5a3a22','#ffd27a',300,80)}),0,2.6,0,0,g);s.castShadow=false;W.boards.push({x,z});addSolid({type:'box',x,z,hw:1.2,hd:.2,yaw})}
+function shed(x,z,yaw,label,col){const g=new T.Group();g.position.set(x,groundAt(x,z),z);g.rotation.y=yaw;scene.add(g);const W2=8,D2=9;
+  mesh(new T.BoxGeometry(W2,3.6,.3),mat('#cfc3ac'),0,1.8,-D2/2,0,g);[-1,1].forEach(q=>mesh(new T.BoxGeometry(.3,3.6,D2),mat('#cfc3ac'),q*W2/2,1.8,0,0,g));mesh(new T.BoxGeometry(W2+.6,.3,D2+.6),mat(col),0,3.75,0,0,g);const fl=mesh(new T.BoxGeometry(W2-.3,.04,D2),mat('#6a6a70'),0,.05,0,0,g);fl.castShadow=false;
+  const s=mesh(new T.BoxGeometry(5,.8,.1),new T.MeshLambertMaterial({map:signTex(label,col,'#ffd27a',640,112)}),0,3.1,D2/2+.1,0,g);s.castShadow=false;
+  for(let i=0;i<3;i++)mesh(new T.TorusGeometry(.33,.13,6,12),mat('#1c1c20'),-W2/2+.7,.18+i*.26,-D2/2+1,0,g).rotation.x=Math.PI/2;mesh(new T.BoxGeometry(1.6,.9,.6),mat('#b02a2a'),W2/2-1,.45,-D2/2+.6,0,g);mesh(new T.BoxGeometry(2.4,.08,.5),mat('#6b4a2e'),W2/2-.4,1.6,-1,Math.PI/2,g);
+  const P=(lx,lz)=>({x:x+lx*Math.cos(yaw)+lz*Math.sin(yaw),z:z-lx*Math.sin(yaw)+lz*Math.cos(yaw)});
+  {const p=P(0,-D2/2);addSolid({type:'box',x:p.x,z:p.z,hw:W2/2,hd:.2,yaw})}[-1,1].forEach(q=>{const p=P(q*W2/2,0);addSolid({type:'box',x:p.x,z:p.z,hw:.2,hd:D2/2,yaw})});return g}
+function buildHome(Hm,x,z,yaw,o){house(x,z,yaw,o);const fx=Math.sin(yaw),fz=Math.cos(yaw),sx=Math.cos(yaw),sz=-Math.sin(yaw),d=o.d/2;Hm.door={x:x+fx*(d+1.2),z:z+fz*(d+1.2)};Hm.garage={x:x+fx*(d+6)+sx*(o.w/2+3),z:z+fz*(d+6)+sz*(o.w/2+3),yaw};
+  const px=x+fx*(d+3)-sx*(o.w/2+1.5),pz=z+fz*(d+3)-sz*(o.w/2+1.5),py=groundAt(px,pz);mesh(new T.BoxGeometry(.1,1.4,.1),mat('#6b4a2e'),px,py+.7,pz);Hm.signP={x:px,z:pz};Hm.sign=mesh(new T.BoxGeometry(1.5,.75,.06),new T.MeshLambertMaterial({map:signTex('FOR SALE','#b02a2a','#ffffff',420,180)}),px,py+1.5,pz,yaw);Hm.sign.castShadow=false;Hm.shown=false;
+  const gp=mesh(new T.BoxGeometry(3.4,.05,6.2),mat('#8a8278'),Hm.garage.x,groundAt(Hm.garage.x,Hm.garage.z)+.05,Hm.garage.z,yaw);gp.castShadow=false}
 function lamp(x,z){const y=groundAt(x,z);mesh(new T.CylinderGeometry(.07,.1,3.6,8),mat('#2a2a30'),x,y+1.8,z);mesh(new T.BoxGeometry(.32,.4,.32),glow('#ffe2a0'),x,y+3.7,z);mesh(new T.ConeGeometry(.3,.25,4),mat('#2a2a30'),x,y+4,z,Math.PI/4);addSolid({type:'c',x,z,r:.15})}
 function fence(x1,z1,x2,z2){const L=Math.hypot(x2-x1,z2-z1),n=Math.ceil(L/2.2),yaw=Math.atan2(x2-x1,z2-z1);for(let i=0;i<=n;i++){const x=lerp(x1,x2,i/n),z=lerp(z1,z2,i/n);mesh(new T.BoxGeometry(.14,1.1,.14),mat('#8a6a44'),x,groundAt(x,z)+.55,z)}
   for(let i=0;i<n;i++){const xa=lerp(x1,x2,(i+.5)/n),za=lerp(z1,z2,(i+.5)/n),y=groundAt(xa,za);[.45,.85].forEach(h=>mesh(new T.BoxGeometry(.06,.1,L/n),mat('#9a7a50'),xa,y+h,za,yaw))}
@@ -4630,6 +4640,7 @@ function buildTowns(){const H=TOWNS[0],A=TOWNS[1];
   house(hx+30,hz-40,0,{w:11,d:8,wall:'#d8c8a8',roof:'#5a3a2a',sign:'Hollowbrook Inn',signBg:'#5a3a22'});
   house(hx-26,hz-34,0,{w:9,d:7,wall:'#e8dcc0',roof:'#2f5a3a',sign:'Old Mill Store',signBg:'#2f5a3a'});
   well(hx,hz);[[-12,-12],[12,-12],[12,12],[-12,12]].forEach(([a,b])=>lamp(hx+a,hz+b));training(hx-40,hz-60);W.yard={x:hx-40,z:hz-60};house(hx-40,hz-80,0,{w:13,d:8,wall:'#e6dccb',roof:'#7a2a2a',sign:"Oren's Gym",signBg:'#7a2a2a'});
+  {const mx=hx+46,mz=hz+32,yaw=-Math.PI/2;shed(mx,mz,yaw,"Brann's Garage",'#3a3a40');W.mech={x:mx,z:mz};W.mechNpc={x:mx-5.4,z:mz+5.6};pump(mx-7,mz-8,0);W.pumps=[{x:mx-7,z:mz-8}]}
   stall(hx+8,hz-14,0,'#c8442a');stall(hx-8,hz+14,Math.PI,'#2f6a8a');[[4,18],[5,19.5],[-16,-4]].forEach(([a,b])=>barrel(hx+a,hz+b));crate(hx+18,hz+2,1);crate(hx+19.2,hz+2.4,.8);
   signpost(hx+58,hz-20,-Math.PI*.75,[['Ashford  →',1],['← Hollowbrook',-1]]);
   // ---- Ashford Market Town: square, fountain, shops, motors, fuel
@@ -4641,10 +4652,12 @@ function buildTowns(){const H=TOWNS[0],A=TOWNS[1];
   // motors lot
   const mx=ax-58,mz=az+2;house(mx-6,mz,Math.PI/2,{w:12,d:9,wall:'#f2f2f2',roof:'#2a2a30',sign:'Ashford Motors',signBg:'#b02a2a'});{const g=mesh(new T.BoxGeometry(18,.06,16),mat('#6a6a70'),mx+8,groundAt(mx+8,mz)+.05,mz);g.castShadow=false}W.motors={x:mx+8,z:mz,yaw:Math.PI/2};
   // fuel station on the edge of town
-  const fx=ax-80,fz=az-46;{const y=groundAt(fx,fz);[[-4,-3],[4,-3],[-4,3],[4,3]].forEach(([a,b])=>{mesh(new T.BoxGeometry(.3,4.4,.3),mat('#e8e8e8'),fx+a,y+2.2,fz+b);addSolid({type:'c',x:fx+a,z:fz+b,r:.25})});mesh(new T.BoxGeometry(10,.5,8),mat('#e8e8e8'),fx,y+4.6,fz);mesh(new T.BoxGeometry(10.1,.25,8.1),glow('#c8442a'),fx,y+4.3,fz);pump(fx-1.5,fz,0);pump(fx+1.5,fz,0);const s=mesh(new T.BoxGeometry(3,1,.1),new T.MeshLambertMaterial({map:signTex('FUEL','#c8442a','#ffffff',300,100)}),fx,y+5.4,fz+4.05);s.castShadow=false}
+  const fx=ax-80,fz=az-46;{const y=groundAt(fx,fz);[[-4,-3],[4,-3],[-4,3],[4,3]].forEach(([a,b])=>{mesh(new T.BoxGeometry(.3,4.4,.3),mat('#e8e8e8'),fx+a,y+2.2,fz+b);addSolid({type:'c',x:fx+a,z:fz+b,r:.25})});mesh(new T.BoxGeometry(10,.5,8),mat('#e8e8e8'),fx,y+4.6,fz);mesh(new T.BoxGeometry(10.1,.25,8.1),glow('#c8442a'),fx,y+4.3,fz);pump(fx-1.5,fz,0);pump(fx+1.5,fz,0);W.pumps.push({x:fx,z:fz});const s=mesh(new T.BoxGeometry(3,1,.1),new T.MeshLambertMaterial({map:signTex('FUEL','#c8442a','#ffffff',300,100)}),fx,y+5.4,fz+4.05);s.castShadow=false}
   [[-16,-16],[16,-16],[16,16],[-16,16],[0,-20],[0,20],[-20,0],[20,0]].forEach(([a,b])=>lamp(ax+a,az+b));
   stall(ax-10,az-12,0,'#f2c14e');stall(ax+10,az-12,0,'#7fd65a');stall(ax+12,az+12,Math.PI,'#ff9a3d');
   signpost(ax-70,az+40,Math.PI*.25,[['Hollowbrook  →',1],['← Ashford',-1]]);
+  buildHome(HOMES[1],ax+56,az+44,-Math.PI/2,{w:9,d:8,fl:2,wall:'#e8e0d0',roof:'#2f4f6a'});
+  buildHome(HOMES[2],-672,536,Math.atan2(-32,-35),{w:8,d:7,wall:'#9a7650',roof:'#4a3a2a',trim:'#5a3a22'});
   buildSites()}
 
 /* ---------------- sky & lights ---------------- */
@@ -4660,7 +4673,7 @@ const CARS={
   sedan:{name:'Brookline Sedan',price:300,color:'#2f4f7a',len:4.6,wid:1.8,hgt:1.42,wb:2.75,wr:.34,mass:1380,power:98000,acc:3.9,brk:9,top:52,grip:1.08,drive:'f',desc:'A comfortable family sedan. Smooth, steady and quick on the open road.'},
   pickup:{name:'Ridgeback Pickup',price:450,color:'#5a6a3a',len:5.2,wid:1.95,hgt:1.85,wb:3.1,wr:.42,mass:1950,power:120000,acc:3.3,brk:7.2,top:46,grip:1,drive:'a',desc:'A tough pickup truck with high clearance. Slow to turn, hard to stop, great on hills.'},
   coupe:{name:'Corsa 72',price:800,color:'#e0a83a',len:4.35,wid:1.8,hgt:1.24,wb:2.55,wr:.33,mass:1220,power:150000,acc:5.4,brk:9.8,top:61,grip:.97,drive:'r',desc:'A classic rear-wheel-drive coupe. Fast, loud and loves to slide.'}};
-W.CARS=CARS;
+for(const k in CARS)CARS[k].kind=k;W.CARS=CARS;
 // the places in the world where your story happens
 const LOCS=[
   {id:'gym',act:'spar',col:'#ffd27a',name:"Oren's Gym",prompt:sv=>sv.f.trained?'Spar with Master Oren':'Train with Master Oren'},
@@ -4671,7 +4684,7 @@ const LOCS=[
   {id:'iron',site:'iron',act:'boss',col:'#ffb070',name:'Iron Pass Gate',prompt:sv=>sv.f.boss?'Challenge Anvil again':'Challenge Anvil, Master of Metal',req:sv=>!!sv.el,lock:'Anvil only fights those who carry an element. Earn one at a shrine first.'}];
 const cars=[];let myCar=null,inCar=null;
 function buildCarMesh(spec,color){const g=new T.Group(),L=spec.len,Wd=spec.wid,body=mat(color),dk=mat('#2a2a30'),chrome=mat('#d0d4da'),glass=new T.MeshPhongMaterial({color:'#2a3a4a',shininess:120,specular:'#9fc4dd',transparent:true,opacity:.85});
-  const base=spec.wr+.12,bh=.55,type=spec===CARS.pickup?'pickup':spec===CARS.hatch?'hatch':spec===CARS.coupe?'coupe':'sedan';
+  const base=spec.wr+.12,bh=.55,type=spec.kind;
   const B=(w,h,d,m,x,y,z)=>{const o=new T.Mesh(new T.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;g.add(o);return o};
   B(Wd,bh,L,body,0,base+bh/2,0);B(Wd+.04,.16,.32,dk,0,base+.1,L/2-.1);B(Wd+.04,.16,.32,dk,0,base+.1,-L/2+.1);
   let cz=0,cl=L*.45,ch=spec.hgt-base-bh;if(type==='hatch'){cz=-L*.08;cl=L*.55}if(type==='coupe'){cz=-L*.1;cl=L*.38;ch*=.95}if(type==='pickup'){cz=L*.12;cl=L*.32}
@@ -4686,8 +4699,8 @@ function buildCarMesh(spec,color){const g=new T.Group(),L=spec.len,Wd=spec.wid,b
   const wheels=[];[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([sx,sz])=>{const piv=new T.Group();piv.position.set(sx*(Wd/2-.08),spec.wr,sz*spec.wb/2);g.add(piv);const w=new T.Mesh(new T.CylinderGeometry(spec.wr,spec.wr,.26,16),mat('#1c1c20'));w.rotation.z=Math.PI/2;w.castShadow=true;piv.add(w);
     const hub=new T.Mesh(new T.CylinderGeometry(spec.wr*.55,spec.wr*.55,.27,10),chrome);hub.rotation.z=Math.PI/2;piv.add(hub);const sp=new T.Mesh(new T.BoxGeometry(.28,spec.wr*.9,.06),dk);sp.position.x=sx*.01;w.add(sp);wheels.push({piv,w,front:sz>0})});
   return {g,wheels,hl,tl}}
-function spawnCar(type,x,z,yaw,o){const spec=CARS[type],m=buildCarMesh(spec,(o&&o.color)||spec.color);scene.add(m.g);
-  const c=Object.assign({type,spec,m,pos:V(x,groundAt(x,z)+.2,z),yaw,vx:0,vy:0,w:0,vyU:0,steer:0,rpm:850,gear:1,eng:false,shiftT:0,owner:null,locked:true,stolen:false,alarm:0,flash:0,pitch:0,roll:0,spin:0,dmg:0,flooded:false,name:spec.name},o||{});cars.push(c);syncCar(c,0);return c}
+function spawnCar(type,x,z,yaw,o){const spec=(o&&o.spec)||CARS[type],m=buildCarMesh(spec,(o&&o.color)||spec.color);scene.add(m.g);
+  const c=Object.assign({type,spec,m,pos:V(x,groundAt(x,z)+.2,z),yaw,vx:0,vy:0,w:0,vyU:0,steer:0,rpm:850,gear:1,eng:false,shiftT:0,owner:null,locked:true,stolen:false,alarm:0,flash:0,pitch:0,roll:0,spin:0,dmg:0,fuel:.4+Math.random()*.5,flooded:false,name:spec.name},o||{});cars.push(c);syncCar(c,0);return c}
 function syncCar(c,dt){const s=c.spec,sn=Math.sin(c.yaw),cs=Math.cos(c.yaw);const fx=sn*s.wb/2,fz=cs*s.wb/2,rx=cs*s.wid/2,rz=-sn*s.wid/2;
   const hFL=groundAt(c.pos.x+fx-rx,c.pos.z+fz-rz),hFR=groundAt(c.pos.x+fx+rx,c.pos.z+fz+rz),hRL=groundAt(c.pos.x-fx-rx,c.pos.z-fz-rz),hRR=groundAt(c.pos.x-fx+rx,c.pos.z-fz+rz);
   const gh=(hFL+hFR+hRL+hRR)/4,tp=Math.atan2((hRL+hRR)/2-(hFL+hFR)/2,s.wb),tr=Math.atan2((hFR+hRR)/2-(hFL+hRL)/2,s.wid);
@@ -4702,7 +4715,7 @@ function carStep(c,dt,inp){const s=c.spec,m=s.mass,sn=Math.sin(c.yaw),cs=Math.co
   // gearbox
   const gearN=5,gs=s.top/gearN;const want=clamp(Math.floor(spd/gs)+1,1,gearN);if(want!==c.gear&&c.vx>=0){c.gear=want;c.shiftT=.22;if(c===inCar)W.sfx('shift',.25)}c.shiftT-=dt;
   c.rpm=c.eng?(c.vx<-.2?900+spd*260:900+((spd-(c.gear-1)*gs)/gs)*5200*(c.gear===1?1:.8)+(c.gear>1?1300:0)):0;c.rpm=Math.max(c.eng?850:0,Math.min(7200,c.rpm+(thr&&spd<1?2500*thr:0)));
-  let Fe=0;if(thr>0)Fe=thr*Math.min(s.mass*s.acc*(c.onRoad?1:.8),s.power/Math.max(spd,1))*(c.shiftT>0?.45:1);
+  let Fe=0;if(thr>0)Fe=thr*Math.min(s.mass*s.acc*(c.onRoad?1:.8),s.power/Math.max(spd,1))*(c.shiftT>0?.45:1)*(c.dmg>80?Math.max(.62,1-(c.dmg-80)/450):1);
   let rev=0;if(brk&&c.vx<.6&&c.eng&&!c.flooded){rev=-brk*s.mass*2.6;if(c.vx<-7.5)rev=0}
   let Fb=0;if(brk&&c.vx>.6)Fb=-s.mass*s.brk*brk*(c.onRoad?1:.75);if(hb)Fb+=-Math.sign(c.vx)*s.mass*2.4*Math.min(1,spd);
   const Cd=s.power/(s.top*s.top*s.top)*.92,roll=(c.onRoad?.015:.06)*m*9.8,drag=-Cd*c.vx*Math.abs(c.vx)-(Math.abs(c.vx)>.05?Math.sign(c.vx)*roll:0)-.6*c.vx;
@@ -4737,7 +4750,7 @@ const NPC_DEFS=[
   {n:'Old Pell',town:0,body:'#4a5a3a',acc:'#c9a868',head:'straw',skin:'#c68a5e',lines:['Fifty years I have farmed this valley.','Mind the river if you drive at night. Folks miss the bridge and end up swimming with their engines.']},
   {n:'Tomas',town:0,body:'#2f4f6a',acc:'#ffffff',head:'goggles',skin:'#9a6440',hair:['messy','#1a1410'],lines:['Is that your car? You should lock it. Well, it locks itself when you walk off. Fancy.','People in Ashford are not as trusting as us. Someone tried to hotwire my cousin\'s truck last spring.']},
   {n:'Little Ana',town:0,body:'#c8442a',acc:'#f4f0e0',head:'bald',hair:['short','#7a4a20'],skin:'#f1d2b6',small:true,lines:['Are you really going to get an element? Like Master Oren\'s students?','When I grow up I am going to be a master of everything. All the elements at once!']},
-  {n:'Brann the Smith',town:0,body:'#3a3a40',acc:'#ff8a3d',head:'bald',skin:'#6b4630',lines:['The road east is long, but it is a good road. I laid half those stones myself.','If you ever crack a sword, bring it here. Or a fender.']},
+  {n:'Brann the Smith',town:0,mech:true,body:'#3a3a40',acc:'#ff8a3d',head:'bald',skin:'#6b4630',lines:['The road east is long, but it is a good road. I laid half those stones myself.','If you ever crack a sword, bring it here. Or a fender.','Drive your car into my workshop and I\'ll repair it, tune it or give it a new coat of paint. Fair prices.']},
   {n:'Master Oren',town:0,body:'#4a3a2a',acc:'#e8d2a0',head:'straw',skin:'#c68a5e',yard:true,lines:['Out here the world is wide. Walk it. Drive it. Learn where everything is.','A fighter who knows the land wins before the fight starts.']},
   {n:'Kessa',town:1,body:'#2e6f73',acc:'#ffffff',head:'fedora',skin:'#e0b08a',hair:['swept','#1a1410'],lines:['Welcome to Ashford! Best market for a hundred miles.','The fountain? Built by the first mayor. Locals toss in a coin for luck. I just like the sound.']},
   {n:'Dalton',town:1,body:'#1f2a3a',acc:'#c0c0c0',head:'visor',skin:'#c68a5e',motors:true,lines:['Ashford Motors, finest cars on Kingsway Road. Have a look around.']},
@@ -4750,8 +4763,8 @@ const NPC_DEFS=[
   {n:'Ivo',town:1,body:'#8a5a1f',acc:'#ffe2a3',head:'cowl',skin:'#6b4630',lines:['The Tea House does the best ginger tea in the valley. Go on, treat yourself.']}];
 function mkNpc(D,i){const id='npc_'+i;const def={id,name:D.n,title:'',el:'unmarked',hp:60,spd:2,pow:1,range:2,stats:[1,1,1,1],body:D.body,accent:D.acc,head:D.head,weapon:D.n==='Master Oren'?'staff':'none',size:D.small?.78:1};
   BYID[id]=def;KITS[id]={passive:['',''],q:null,e:null,r:null};SKIN[id]=D.skin;if(D.hair)HAIR[id]=D.hair;MELEE[id]=[1,1,1];STYLE[id]='blade';
-  const f=mkFighter(def,false,0);world.remove(f.rig.root);scene.add(f.rig.root);const t=TOWNS[D.town];let hx=t.x+rand(-t.r*.5,t.r*.5),hz=t.z+rand(-t.r*.5,t.r*.5);if(D.yard){hx=W.yard.x;hz=W.yard.z+2}if(D.motors){hx=W.motors.x-2;hz=W.motors.z+5}if(D.shop){const sp=W[D.shop];hx=sp.x+2.2;hz=sp.z+1.4}if(D.clinic){hx=W.spots.clinic.x+2;hz=W.spots.clinic.z-1}
-  const p={x:hx,z:hz};collide(p,.6);f.pos.set(p.x,groundAt(p.x,p.z),p.z);f.yaw=rand(0,TAU);f.foe=f;Object.assign(f,{npc:D,home:{x:p.x,z:p.z},tgt:null,wait:rand(1,5),talkI:0,static:!!(D.yard||D.motors||D.shop||D.clinic),bubble:null,bubT:0});NPCS.push(f);return f}
+  const f=mkFighter(def,false,0);world.remove(f.rig.root);scene.add(f.rig.root);const t=TOWNS[D.town];let hx=t.x+rand(-t.r*.5,t.r*.5),hz=t.z+rand(-t.r*.5,t.r*.5);if(D.yard){hx=W.yard.x;hz=W.yard.z+2}if(D.motors){hx=W.motors.x-2;hz=W.motors.z+5}if(D.shop){const sp=W[D.shop];hx=sp.x+2.2;hz=sp.z+1.4}if(D.clinic){hx=W.spots.clinic.x+2;hz=W.spots.clinic.z-1}if(D.mech){hx=W.mechNpc.x;hz=W.mechNpc.z}
+  const p={x:hx,z:hz};collide(p,.6);f.pos.set(p.x,groundAt(p.x,p.z),p.z);f.yaw=rand(0,TAU);f.foe=f;Object.assign(f,{npc:D,home:{x:p.x,z:p.z},tgt:null,wait:rand(1,5),talkI:0,static:!!(D.yard||D.motors||D.shop||D.clinic||D.mech),bubble:null,bubT:0});NPCS.push(f);return f}
 function npcStep(f,dt,near){const D=f.npc;if(f.dodge>0){f.dodge-=dt;f.pos.x+=f.vel.x*dt;f.pos.z+=f.vel.z*dt;f.vel.x*=Math.pow(.05,dt);f.vel.z*=Math.pow(.05,dt)}
   else if(W.talk===f||f.static){f.vel.set(0,0,0);if(W.talk===f||(near&&f.static))f.yaw=turnTo(f.yaw,Math.atan2(W.hero.pos.x-f.pos.x,W.hero.pos.z-f.pos.z),4*dt)}
   else{if(!f.tgt){f.wait-=dt;f.vel.set(0,0,0);if(f.wait<=0){const a=rand(0,TAU),r=rand(4,D.town===1?30:22);f.tgt={x:f.home.x+Math.cos(a)*r,z:f.home.z+Math.sin(a)*r}}}
@@ -4773,6 +4786,7 @@ function css(){const s=document.createElement('style');s.textContent=`
 #rh-msg{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:rgba(10,8,26,.8);padding:8px 16px;border-radius:12px;font-size:15px;opacity:0;transition:opacity .4s}#rh-msg.on{opacity:1}
 .rh-obj{position:absolute;left:16px;top:16px;max-width:min(360px,60vw);background:rgba(10,8,26,.78);border-left:4px solid #ffd27a;border-radius:10px;padding:10px 14px;display:none}.rh-obj b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ffd27a}.rh-obj p{margin:4px 0 0;font-size:15px;line-height:1.35}.rh-obj small{display:block;margin-top:4px;opacity:.8;font-size:13px}
 .rh-qm{position:absolute;transform:translate(-50%,-100%);font:900 26px Georgia,serif;color:#ffd27a;text-shadow:0 2px 4px #000,0 0 10px rgba(255,210,122,.6)}
+.rh-gpop{position:absolute;right:16px;width:190px;text-align:center;top:238px;font-weight:900;font-size:20px;text-shadow:0 2px 6px #000;animation:gpop 1.7s forwards;pointer-events:none}@keyframes gpop{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-28px)}}
 #rh-gold{position:absolute;right:16px;top:214px;width:190px;text-align:center;font-weight:800;color:#ffd27a;text-shadow:0 2px 6px rgba(0,0,0,.7)}
 #rh-talk{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(620px,calc(100% - 32px));background:rgba(12,10,28,.92);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:14px 18px;display:none;pointer-events:auto}
 #rh-talk b{color:#ffd27a;font-size:17px}#rh-talk p{margin:6px 0 4px;font-size:16px;line-height:1.45}#rh-talk small{opacity:.7}
@@ -4859,11 +4873,14 @@ function lerpAng(a,b,k){let d=((b-a+Math.PI)%(TAU)+TAU)%TAU-Math.PI;return a+d*k
 /* ---------------- interactions ---------------- */
 let hot=null,hotT=0;
 function nearDoor(c){const s=c.spec,sn=Math.sin(c.yaw),cs=Math.cos(c.yaw),dx=c.pos.x-cs*(s.wid/2+.6),dz=c.pos.z+sn*(s.wid/2+.6);return Math.hypot(W.hero.pos.x-dx,W.hero.pos.z-dz)<2.2||Math.hypot(W.hero.pos.x-c.pos.x,W.hero.pos.z-c.pos.z)<s.len*.55+.8}
-function enterCar(c){inCar=c;c.eng=true;c.flooded=c.flooded&&c.pos.y<WATER-.5;W.sfx('door');setTimeout(()=>{if(inCar===c){W.sfx('start');engineAudio(true)}},250);c.locked=false;if(c.alarm>0&&c!==myCar){}W.camDist=c.spec.len*1.45}
+function enterCar(c){inCar=c;c.eng=c.fuel>0;if(!c.eng)W.say('The tank is empty. Press R to call for a fuel can.');c.flooded=c.flooded&&c.pos.y<WATER-.5;W.sfx('door');setTimeout(()=>{if(inCar===c&&c.eng){W.sfx('start');engineAudio(true)}},250);c.locked=false;if(c.alarm>0&&c!==myCar){}W.camDist=c.spec.len*1.45}
 function exitCar(){const c=inCar;if(!c)return;if(Math.abs(c.vx)>3){W.say('Slow down before you get out.');return}inCar=null;c.eng=false;c.vx=c.vy=c.w=0;engineAudio(false);W.sfx('door');const s=c.spec,sn=Math.sin(c.yaw),cs=Math.cos(c.yaw);const p={x:c.pos.x-cs*(s.wid/2+.8),z:c.pos.z+sn*(s.wid/2+.8)};collide(p,.4);W.hero.pos.set(p.x,groundAt(p.x,p.z)+.2,p.z);W.hero.vel.set(0,0,0);W.hero.yaw=c.yaw;if(c===myCar)c.lockArm=true}
 function interact(){const h=W.hero;let pr='',act=null;hot=null;
-  if(inCar){pr=`<kbd>F</kbd> Get out`;act='exit';if(inCar.flooded)pr+=` · <kbd>R</kbd> Call a tow`;return [pr,act]}
+  if(inCar){pr=`<kbd>F</kbd> Get out`;act='exit';let e=null;if(inCar.flooded)pr+=` · <kbd>R</kbd> Call a tow`;else if(inCar.fuel<=0)pr+=` · <kbd>R</kbd> Call for a fuel can`;
+    if(Math.abs(inCar.vx)<1.5){if(W.pumps.some(p=>Math.hypot(inCar.pos.x-p.x,inCar.pos.z-p.z)<5.5)&&inCar.fuel<.99){pr=`<kbd>E</kbd> Fill up (◉ ${fuelCost(inCar)}) · `+pr;e='fuel'}else if(Math.hypot(inCar.pos.x-W.mech.x,inCar.pos.z-W.mech.z)<6){pr=`<kbd>E</kbd> Service at Brann's Garage · `+pr;e='mech'}}return [pr,act,e]}
   const sv=umSV();for(const L of LOCS){if(Math.hypot(h.pos.x-L.x,h.pos.z-L.z)<4.2){const ok=!L.req||L.req(sv);return ok?[`<kbd>E</kbd> ${L.prompt(sv)}`,'loc:'+L.id]:[`🔒 ${L.name}: ${L.lock}`,null]}}
+  for(const B of BIZ){const sp=W.spots[B.spot];if(Math.hypot(h.pos.x-sp.x,h.pos.z-sp.z)<2.4){const o=bizOf(sv,B.id);return [o?`<kbd>E</kbd> Collect your cut from the ${B.name} (◉ ${Math.floor(o.bank)})`:`<kbd>E</kbd> Buy a share of the ${B.name} (◉ ${B.price})`,'biz:'+B.id]}}
+  for(const Hm of HOMES){if(!Hm.door)continue;const own=(sv.homes||[]).includes(Hm.id);if(Math.hypot(h.pos.x-Hm.door.x,h.pos.z-Hm.door.z)<2.8||(!own&&Math.hypot(h.pos.x-Hm.signP.x,h.pos.z-Hm.signP.z)<2.5))return own?[`<kbd>E</kbd> Open your wardrobe`,'shop:wardrobe']:[`<kbd>E</kbd> View the ${Hm.name} · for sale`,'home:'+Hm.id];if(own&&Math.hypot(h.pos.x-Hm.garage.x,h.pos.z-Hm.garage.z)<4.5)return [`<kbd>E</kbd> Open your garage`,'garage:'+Hm.id]}
   let bestC=null,bd=99;for(const c of cars){const d=Math.hypot(h.pos.x-c.pos.x,h.pos.z-c.pos.z);if(d<bd&&nearDoor(c)){bd=d;bestC=c}}
   let bestN=null,bn=2.6;for(const f of NPCS){if(f.hidden)continue;const d=Math.hypot(h.pos.x-f.pos.x,h.pos.z-f.pos.z);if(d<bn){bn=d;bestN=f}}
   if(bestN&&(!bestC||bn<bd)){const D=bestN.npc;if(D.motors)return [`<kbd>E</kbd> Browse cars at Ashford Motors`,'motors:'+NPCS.indexOf(bestN)];if(D.shop)return [`<kbd>E</kbd> ${D.shop==='tailor'?'Browse the Tailor':'Get a new look at the Barber'}`,'shop:'+D.shop];return [`<kbd>E</kbd> Talk to ${D.n}`,'talk:'+NPCS.indexOf(bestN)]}
@@ -4879,10 +4896,11 @@ function talk(f){if(W.talk!==f){W.talk=f;f.talkI=0}else{f.talkI++}const D=f.npc,
 function openPanel(html){ui.panel.innerHTML=html;ui.panel.style.display='block';W.panelOpen=true;ui.panel.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closePanel())}
 function closePanel(){ui.panel.style.display='none';W.panelOpen=false}
 function statBars(s){const r=(v,a,b)=>clamp((v-a)/(b-a),.08,1)*100;return `<div class="bars"><span>Speed</span><i style="width:${r(s.top,38,62)}%"></i><span>Power</span><i style="width:${r(s.power/s.mass,50,125)}%"></i><span>Grip</span><i style="width:${r(s.grip,.9,1.1)}%"></i><span>Weight</span><i style="width:${r(s.mass,1000,2000)}%"></i></div>`}
-function garage(){const sv=umSV();openPanel(`<h2>Your garage</h2><p style="opacity:.75;margin:0">Pick which of your cars waits in the driveway. Buy more at Ashford Motors.</p>${Object.keys(CARS).map(k=>{const s=CARS[k],own=sv.cars.includes(k);return `<div class="rc"><div><b>${s.name}</b>${own?'':' <small style="display:inline">· not owned</small>'}<small>${s.desc}</small>${statBars(s)}</div>${own?`<button class="btn sm" data-car="${k}" ${sv.carSel===k?'disabled':''}>${sv.carSel===k?'In driveway':'Use'}</button>`:''}</div>`}).join('')}<div style="margin-top:12px;text-align:right"><button class="btn ghost sm" data-close>Close</button></div>`);
-  ui.panel.querySelectorAll('[data-car]').forEach(b=>b.onclick=()=>{sv.carSel=b.dataset.car;umSave();spawnMyCar(true);W.sfx('chirp');closePanel();W.say(`Your ${CARS[sv.carSel].name} is in the driveway.`)})}
-function motors(){const sv=umSV();openPanel(`<h2>Ashford Motors</h2><p style="opacity:.75;margin:0">"Every one of them runs like a dream. Mostly." · You have <b style="color:#ffd27a">◉ ${sv.gold||0} gold</b></p>${Object.keys(CARS).map(k=>{const s=CARS[k],own=sv.cars.includes(k);return `<div class="rc"><div><b>${s.name}</b> <small style="display:inline">· ${own?'owned':s.price+' gold'}</small><small>${s.desc}</small>${statBars(s)}</div>${own?'<span style="opacity:.7">Owned</span>':`<button class="btn sm" data-buy="${k}" ${sv.gold<s.price?'disabled':''}>Buy</button>`}</div>`}).join('')}<div style="margin-top:12px;text-align:right"><button class="btn ghost sm" data-close>Close</button></div>`);
-  ui.panel.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy,s=CARS[k];if(sv.gold<s.price)return;sv.gold-=s.price;sv.cars.push(k);sv.carSel=k;umSave();W.sfx('chirp');closePanel();if(myCar&&inCar!==myCar){scene.remove(myCar.m.g);cars.splice(cars.indexOf(myCar),1)}myCar=spawnCar(k,W.motors.x,W.motors.z,W.motors.yaw,{owner:'me',locked:false});W.say(`You bought the ${s.name}! It's parked on the lot, keys in your pocket.`)})}
+function garage(spot){const sv=umSV();openPanel(`<h2>Your garage</h2><p style="opacity:.75;margin:0">Pick which of your cars waits in the driveway. Buy more at Ashford Motors.</p>${Object.keys(CARS).map(k=>{const s=CARS[k],own=sv.cars.includes(k);return `<div class="rc"><div><b>${s.name}</b>${own?'':' <small style="display:inline">· not owned</small>'}<small>${s.desc}</small>${statBars(s)}</div>${own?`<button class="btn sm" data-car="${k}" ${sv.carSel===k?'disabled':''}>${sv.carSel===k?'In driveway':'Use'}</button>`:''}</div>`}).join('')}<div style="margin-top:12px;text-align:right"><button class="btn ghost sm" data-close>Close</button></div>`);
+  ui.panel.querySelectorAll('[data-car]').forEach(b=>b.onclick=()=>{sv.carSel=b.dataset.car;umSave();spawnMyCar(spot||true);W.sfx('chirp');closePanel();W.say(`Your ${CARS[sv.carSel].name} is in the driveway.`)})}
+function motors(){const sv=umSV();openPanel(`<h2>Ashford Motors</h2><p style="opacity:.75;margin:0">"Every one of them runs like a dream. Mostly." · You have <b style="color:#ffd27a">◉ ${sv.gold||0} gold</b></p>${Object.keys(CARS).map(k=>{const s=CARS[k],own=sv.cars.includes(k);return `<div class="rc"><div><b>${s.name}</b> <small style="display:inline">· ${own?'owned':s.price+' gold'}</small><small>${s.desc}</small>${statBars(s)}</div>${own?(k==='hatch'?'<span style="opacity:.7">Owned</span>':`<button class="btn ghost sm" data-sell="${k}">Sell · ◉ ${sellPrice(sv,k)}</button>`):`<button class="btn sm" data-buy="${k}" ${sv.gold<s.price?'disabled':''}>Buy</button>`}</div>`}).join('')}<div style="margin-top:12px;text-align:right"><button class="btn ghost sm" data-close>Close</button></div>`);
+  ui.panel.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const k=b.dataset.sell;if(inCar&&inCar.type===k&&inCar===myCar){W.say('Get out of it first.');return}const p=sellPrice(sv,k);sv.gold+=p;sv.cars=sv.cars.filter(x=>x!==k);if(sv.cmod)delete sv.cmod[k];if(sv.carSel===k){sv.carSel='hatch';if(myCar){scene.remove(myCar.m.g);cars.splice(cars.indexOf(myCar),1);myCar=null}spawnMyCar(true)}umSave();W.sfx('chirp');W.say(`Dalton buys your ${CARS[k].name} for ◉ ${p}.`);motors()});
+  ui.panel.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy,s=CARS[k];if(sv.gold<s.price)return;sv.gold-=s.price;sv.cars.push(k);sv.carSel=k;umSave();W.sfx('chirp');closePanel();if(myCar&&inCar!==myCar){keepCarState();scene.remove(myCar.m.g);cars.splice(cars.indexOf(myCar),1)}myCar=spawnCar(k,W.motors.x,W.motors.z,W.motors.yaw,{owner:'me',locked:false,spec:modSpec(k,cmod(sv,k)),fuel:1});W.say(`You bought the ${s.name}! It's parked on the lot, keys in your pocket.`)})}
 // ---------- looks: Tailor, Barber and your wardrobe ----------
 const LOOK_KEYS=['body','acc','pants','skin','head','hair','hairc','weapon','hat','hatc','mask','maskc','glasses','scarf','scarfc','pack','packc','cape','capec'];
 const CAT_N={col:'Fabric colours',hat:'Hats',mask:'Masks',glasses:'Glasses',scarf:'Scarves',pack:'Backpacks',cape:'Capes',hair:'Hairstyles',hairc:'Hair dye'};
@@ -4915,9 +4933,60 @@ function renderLook(){const sv=umSV(),own=id=>umOwns(sv,id),cats=lookMode==='war
     const cur=curLook(sv);LOOK_KEYS.forEach(k=>{if(ok(k))sv[k]=look[k];else sv[k]=cur[k]});umRegister(sv);sv.por=portraits.hero;umSave();W.restyle(curLook(sv));closeLook()};
   P.querySelector('#lk-cancel').onclick=()=>{W.restyle(curLook(sv));closeLook()}}
 function closeLook(){ui.panel.classList.remove('lk');closePanel();W.mirror=false;lookMode=null}
-function spawnMyCar(home){const sv=umSV();if(myCar){if(inCar===myCar)return;scene.remove(myCar.m.g);cars.splice(cars.indexOf(myCar),1);myCar=null}const k=sv.carSel||'hatch';let x=W.garage.x,z=W.garage.z,y=W.garage.yaw;if(!home&&sv.roam&&sv.roam.car&&sv.roam.car.type===k&&groundAt(sv.roam.car.x,sv.roam.car.z)>WATER-.3){x=sv.roam.car.x;z=sv.roam.car.z;y=sv.roam.car.yaw}myCar=spawnCar(k,x,z,y,{owner:'me',locked:true})}
+function spawnMyCar(home){const sv=umSV();if(myCar){if(inCar===myCar)return;keepCarState();scene.remove(myCar.m.g);cars.splice(cars.indexOf(myCar),1);myCar=null}const k=sv.carSel||'hatch';const G=home&&home.x!==undefined?home:W.garage;let x=G.x,z=G.z,y=G.yaw;if(!home&&sv.roam&&sv.roam.car&&sv.roam.car.type===k&&groundAt(sv.roam.car.x,sv.roam.car.z)>WATER-.3){x=sv.roam.car.x;z=sv.roam.car.z;y=sv.roam.car.yaw}{const cm=cmod(sv,k);myCar=spawnCar(k,x,z,y,{owner:'me',locked:true,spec:modSpec(k,cm),color:cm.paint||undefined,dmg:cm.dmg||0,fuel:cm.fuel===undefined?1:cm.fuel})}}
 function parkedCars(){const spots=[[TOWNS[1].x-14,TOWNS[1].z+44,0,'sedan','#7a7a80',9],[TOWNS[1].x+44,TOWNS[1].z-8,Math.PI/2,'pickup','#8a2a2a',8],[TOWNS[0].x+20,TOWNS[0].z+22,Math.PI,'pickup','#3a4a6a',4],[TOWNS[1].x-80,TOWNS[1].z-40,0,'hatch','#e8e8e8',10],[TOWNS[1].x+20,TOWNS[1].z+44,Math.PI,'coupe','#2a6a4a',11]];
   spots.forEach(([x,z,y,k,col,own])=>{const c=spawnCar(k,x,z,y,{color:col,owner:own,locked:true});c.ownerName=NPC_DEFS[own]?NPC_DEFS[own].n:'someone'})}
+
+/* ---------------- money & buying ---------------- */
+const UPG={eng:{n:'Engine tune',lv:[150,320,600],d:'More power, quicker off the line and a higher top speed.'},brk:{n:'Brakes',lv:[120,280],d:'Stop shorter and harder.'},tyre:{n:'Tyres',lv:[140,300],d:'More grip in the corners.'}};
+const LVN=['Stock','Street','Sport','Race'];
+const PAINTS=['#c8442a','#2f4f7a','#5a6a3a','#e0a83a','#f4f4f4','#1a1a1e','#7a7a80','#2a6a4a','#6a3a8a','#e88aa8','#3aa0d0','#8a5a2a'];
+const TANK={hatch:7000,sedan:6000,pickup:5000,coupe:4500};
+const HOMES=[{id:'cottage',name:'Hollow Cottage',price:0},
+  {id:'town',name:'Ashford Townhouse',price:1500,desc:'A tall townhouse on the quiet east side of Ashford, a short walk from the market square. It has a wardrobe inside and its own driveway where any of your cars can wait.'},
+  {id:'cabin',name:'Lakeside Cabin',price:2400,desc:'A wooden cabin above the shore of Lake Mere, at the end of Lakeside Lane. Quiet, with a view over the water. It has a wardrobe inside and its own driveway where any of your cars can wait.'}];
+const BIZ=[{id:'bakery',name:'Ashford Bakery',who:'Rosa',price:900,rate:14,cap:420,spot:'bakery'},{id:'inn',name:'Hollowbrook Inn',who:'The innkeeper',price:1300,rate:20,cap:600,spot:'inn'},{id:'tea',name:'Tea House',who:'The tea master',price:1800,rate:28,cap:840,spot:'tea'}];
+function cmod(sv,k){sv.cmod=sv.cmod||{};return sv.cmod[k]||(sv.cmod[k]={eng:0,brk:0,tyre:0,paint:null,dmg:0,fuel:1})}
+function modSpec(k,cm){const b=CARS[k];return Object.assign({},b,{power:b.power*(1+.14*cm.eng),acc:b.acc*(1+.08*cm.eng),top:b.top*(1+.05*cm.eng),brk:b.brk*(1+.13*cm.brk),grip:b.grip*(1+.045*cm.tyre)})}
+const fuelCost=c=>Math.max(1,Math.ceil((1-c.fuel)*40));
+const repairCost=c=>Math.max(1,Math.ceil(c.dmg*.6));
+function sellPrice(sv,k){const cm=cmod(sv,k);let up=0;for(const u in UPG)for(let i=0;i<cm[u];i++)up+=UPG[u].lv[i];return Math.floor(CARS[k].price*.5+up*.4)}
+function keepCarState(){if(!myCar)return;const cm=cmod(umSV(),myCar.type);cm.dmg=Math.round(myCar.dmg);cm.fuel=myCar.fuel}
+function bizOf(sv,id){return (sv.biz||{})[id]}
+function refuel(){const c=inCar,sv=umSV();if(!c)return;const pay=Math.min(fuelCost(c),sv.gold||0);if(pay<=0){W.say("You can't afford any fuel.");return}c.fuel=Math.min(1,c.fuel+pay/40);sv.gold-=pay;umSave();W.sfx('chirp');W.say(`${c.fuel>.99?'Tank full':'Filled up as much as you could afford'} · ◉ ${pay}`);if(!c.eng&&!c.flooded){c.eng=true;W.sfx('start');engineAudio(true)}}
+function mechanic(){const sv=umSV(),c=inCar;if(!c)return;if(c!==myCar){W.say('Brann: "That isn\'t your car. I only work on cars that belong to whoever brings them in."');return}
+  const k=c.type,cm=cmod(sv,k),rc=repairCost(c),gold=sv.gold||0,dmgP=Math.min(100,Math.round(c.dmg/2.5));
+  openPanel(`<h2>Brann's Garage</h2><p style="opacity:.75;margin:0">"Let's have a look at your ${c.name}." · You have <b style="color:#ffd27a">◉ ${gold} gold</b></p>
+  <div class="rc"><div><b>Body repair</b><small>${c.dmg<1?'Not a scratch on it.':`Damage ${dmgP}%. ${c.dmg>80?'The knocks are costing the engine power.':'A few dents and scrapes.'}`}</small></div>${c.dmg<1?'<span style="opacity:.6">Perfect</span>':`<button class="btn sm" data-fix ${gold<rc?'disabled':''}>Repair · ◉ ${rc}</button>`}</div>
+  ${Object.keys(UPG).map(u=>{const U=UPG[u],lv=cm[u],nx=U.lv[lv];return `<div class="rc"><div><b>${U.n}</b> <small style="display:inline">· ${LVN[lv]}</small><small>${U.d}</small></div>${nx===undefined?'<span style="opacity:.6">Maxed</span>':`<button class="btn sm" data-up="${u}" ${gold<nx?'disabled':''}>${LVN[lv+1]} · ◉ ${nx}</button>`}</div>`}).join('')}
+  <div class="rc"><div><b>Respray</b> <small style="display:inline">· ◉ 60</small><small>Pick a new colour.</small><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${PAINTS.map(p=>`<button data-paint="${p}" style="width:26px;height:26px;border-radius:6px;border:2px solid ${p===(cm.paint||CARS[k].color)?'#ffd27a':'rgba(255,255,255,.3)'};background:${p};cursor:pointer" ${gold<60?'disabled':''}></button>`).join('')}</div></div></div>
+  <div style="margin-top:12px;text-align:right"><button class="btn ghost sm" data-close>Done</button></div>`);
+  const pay=n=>{sv.gold-=n;W.sfx('chirp');umSave()},fix=ui.panel.querySelector('[data-fix]');
+  if(fix)fix.onclick=()=>{pay(rc);c.dmg=0;cm.dmg=0;W.say('Brann hammers out every dent. Good as new.');mechanic()};
+  ui.panel.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const u=b.dataset.up,p=UPG[u].lv[cm[u]];if(sv.gold<p)return;pay(p);cm[u]++;c.spec=modSpec(k,cm);W.say(`${UPG[u].n}: upgraded to ${LVN[cm[u]]}.`);mechanic()});
+  ui.panel.querySelectorAll('[data-paint]').forEach(b=>b.onclick=()=>{if(sv.gold<60)return;pay(60);cm.paint=b.dataset.paint;scene.remove(c.m.g);c.m=buildCarMesh(c.spec,cm.paint);scene.add(c.m.g);syncCar(c,0);mechanic()})}
+function bizPanel(B){const sv=umSV(),o=bizOf(sv,B.id),gold=sv.gold||0;
+  if(o){const n=Math.floor(o.bank);if(n>0){sv.gold=gold+n;o.bank-=n;umSave();W.sfx('chirp');W.say(`You collect ◉ ${n} from the ${B.name}.`)}else W.say(`Nothing to collect yet. The ${B.name} earns you ◉ ${B.rate} a minute.`);return}
+  openPanel(`<h2>${B.name}</h2><p style="line-height:1.5">Buy a share of the ${B.name}. ${B.who} keeps running it, and you get a cut of every sale: about <b style="color:#ffd27a">◉ ${B.rate} a minute</b> while you're out in the world. Your cut piles up here until you come by to collect it. It holds up to ◉ ${B.cap}, so don't stay away too long.</p><p>Price: <b style="color:#ffd27a">◉ ${B.price}</b> · You have ◉ ${gold}</p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost sm" data-close>Not now</button><button class="btn sm" id="rh-bbuy" ${gold<B.price?'disabled':''}>Buy the share</button></div>`);
+  ui.panel.querySelector('#rh-bbuy').onclick=()=>{if(sv.gold<B.price)return;sv.gold-=B.price;sv.biz=sv.biz||{};sv.biz[B.id]={bank:0};umSave();W.sfx('chirp');closePanel();W.say(`You own a share of the ${B.name}! Come back to collect your cut.`)}}
+function homePanel(Hm){const sv=umSV(),gold=sv.gold||0;openPanel(`<h2>${Hm.name}</h2><p style="line-height:1.5">${Hm.desc}</p><p>Price: <b style="color:#ffd27a">◉ ${Hm.price}</b> · You have ◉ ${gold}</p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost sm" data-close>Not now</button><button class="btn sm" id="rh-hbuy" ${gold<Hm.price?'disabled':''}>Buy it</button></div>`);
+  ui.panel.querySelector('#rh-hbuy').onclick=()=>{if(sv.gold<Hm.price)return;sv.gold-=Hm.price;sv.homes=sv.homes||['cottage'];sv.homes.push(Hm.id);umSave();W.sfx('chirp');closePanel();W.say(`The ${Hm.name} is yours! Your wardrobe is inside, and the driveway is your garage.`)}}
+function wealth(){const sv=umSV(),inc=BIZ.filter(B=>bizOf(sv,B.id)).reduce((a,B)=>a+B.rate,0),hd=t=>`<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ffd27a;margin-top:12px">${t}</div>`;
+  openPanel(`<h2>Your money</h2><p style="margin:0">◉ <b style="color:#ffd27a">${sv.gold||0} gold</b>${inc?` · your shares earn ◉ ${inc} a minute`:''}</p>
+  ${hd('Cars')}${sv.cars.map(k=>{const cm=cmod(sv,k),f=myCar&&myCar.type===k?myCar.fuel:cm.fuel,dm=myCar&&myCar.type===k?myCar.dmg:cm.dmg;return `<div class="rc"><div><b>${CARS[k].name}</b>${sv.carSel===k?' <small style="display:inline">· in use</small>':''}<small>Engine ${LVN[cm.eng]} · Brakes ${LVN[cm.brk]} · Tyres ${LVN[cm.tyre]} · Fuel ${Math.round((f===undefined?1:f)*100)}% · Damage ${Math.min(100,Math.round((dm||0)/2.5))}%</small></div></div>`}).join('')}
+  ${hd('Homes')}${HOMES.filter(Hm=>Hm.id==='cottage'||(sv.homes||[]).includes(Hm.id)).map(Hm=>`<div class="rc"><div><b>${Hm.name}</b></div></div>`).join('')}${HOMES.filter(Hm=>Hm.price&&!(sv.homes||[]).includes(Hm.id)).map(Hm=>`<div class="rc"><div><b style="opacity:.6">${Hm.name}</b><small>For sale · ◉ ${Hm.price}</small></div></div>`).join('')}
+  ${hd('Business shares')}${BIZ.map(B=>{const o=bizOf(sv,B.id);return `<div class="rc"><div><b style="${o?'':'opacity:.6'}">${B.name}</b><small>${o?`Earns ◉ ${B.rate}/min · ◉ ${Math.floor(o.bank)} waiting to be collected`:`Share for sale · ◉ ${B.price} · earns ◉ ${B.rate}/min`}</small></div></div>`}).join('')}
+  <div style="margin-top:12px;text-align:right"><button class="btn ghost sm" data-close>Close</button></div>`)}
+let lastGold=null,puffs=[],puffT=0;
+function moneyTick(dt){const sv=umSV();
+  if(inCar&&inCar.eng&&!inCar.flooded){const thr=keys.has('KeyW')||keys.has('ArrowUp')?1:0,was=inCar.fuel;inCar.fuel=Math.max(0,inCar.fuel-Math.abs(inCar.vx)*dt*(.45+.75*thr)/(TANK[inCar.type]||6000)-dt/2400);
+    if(was>.15&&inCar.fuel<=.15)W.say('Fuel is low. Fill up at a pump: Ashford fuel station or Brann\'s Garage.');if(inCar.fuel<=0){inCar.eng=false;engineAudio(false);W.say('Out of fuel! Press R to call for a fuel can.')}}
+  if(sv.biz)for(const B of BIZ){const o=sv.biz[B.id];if(o)o.bank=Math.min(B.cap,o.bank+B.rate*dt/60)}
+  for(const Hm of HOMES){if(!Hm.sign)continue;const own=(sv.homes||[]).includes(Hm.id);if(own!==Hm.shown){Hm.shown=own;Hm.sign.material=new T.MeshLambertMaterial({map:own?signTex('YOURS','#2f6a3a','#ffffff',420,180):signTex('FOR SALE','#b02a2a','#ffffff',420,180)})}}
+  const g=sv.gold||0;if(lastGold!==null&&g!==lastGold){const d=g-lastGold,e=document.createElement('div');e.className='rh-gpop';e.textContent=(d>0?'+':'−')+Math.abs(d);e.style.color=d>0?'#9ff0a0':'#ff8a7a';ui.hud.appendChild(e);setTimeout(()=>e.remove(),1700)}lastGold=g;
+  if(!puffs.length)for(let i=0;i<14;i++){const m=new T.Mesh(new T.SphereGeometry(.35,7,5),new T.MeshBasicMaterial({color:'#5a5a5a',transparent:true,opacity:0,depthWrite:false}));m.visible=false;scene.add(m);puffs.push({m,t:0})}
+  const c=inCar&&inCar.dmg>150&&inCar.eng?inCar:null;puffT-=dt;if(c&&puffT<=0){puffT=.13;const p=puffs.find(p=>p.t<=0);if(p){const s=c.spec;p.t=1.4;p.m.visible=true;p.m.position.set(c.pos.x+Math.sin(c.yaw)*s.len*.38,c.pos.y+s.hgt*.8,c.pos.z+Math.cos(c.yaw)*s.len*.38)}}
+  for(const p of puffs){if(p.t<=0)continue;p.t-=dt;p.m.position.y+=dt*1.4;p.m.scale.setScalar(1+(1.4-p.t)*1.4);p.m.material.opacity=Math.max(0,p.t/1.4)*.45;if(p.t<=0)p.m.visible=false}}
 
 /* ---------------- missions ---------------- */
 let MS=null;// the active job
@@ -5025,28 +5094,29 @@ function build(){if(built)return;built=true;scene=new T.Scene();camera=new T.Per
   addEventListener('pointermove',e=>{if(mode!=='roam'||!mdown)return;W.camYaw-=(e.clientX-lastMX)*.006;W.camPitch=clamp(W.camPitch+(e.clientY-lastMY)*.004,-.15,1.1);lastMX=e.clientX;lastMY=e.clientY});
   renderer.domElement.addEventListener('wheel',e=>{if(mode!=='roam')return;W.camDist=clamp(W.camDist+e.deltaY*.005,3,14)},{passive:true});
   addEventListener('resize',()=>{if(camera){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}})}
-W.enter=()=>{const sv=umSV();if(!sv)return;audio();sv.cars=sv.cars||['hatch'];sv.carSel=sv.carSel||'hatch';umRegister(sv,!!portraits.hero);
+W.enter=()=>{const sv=umSV();if(!sv)return;lastGold=null;audio();sv.cars=sv.cars||['hatch'];sv.carSel=sv.carSel||'hatch';umRegister(sv,!!portraits.hero);
   const wasBuilt=built;build();if(!wasBuilt||!W.hero||W.hero.def!==BYID.hero){if(W.hero)scene.remove(W.hero.rig.root);W.hero=mkFighter(BYID.hero,true,0);world.remove(W.hero.rig.root);scene.add(W.hero.rig.root);W.hero.foe=W.hero}
   const r=sv.roam;if(r&&r.x!==undefined){W.hero.pos.set(r.x,groundAt(r.x,r.z),r.z);W.hero.yaw=r.yaw||0}else{W.hero.pos.set(W.home.x+9,groundAt(W.home.x+9,W.home.z),W.home.z);W.hero.yaw=Math.PI/2}
   spawnMyCar(false);inCar=null;W.talk=null;W.panelOpen=false;mode='roam';resetFighters&&0;show(null);$('hud').hidden=true;$('touch').hidden=true;ui.hud.hidden=false;W.camYaw=W.hero.yaw;camPos.copy(W.hero.pos).add(V(0,4,-6));camLook.copy(W.hero.pos);curArea='';
   W.say(r?'':"This is Hollowbrook, your home. Master Oren's gym is on the north side of the village. Your car is in the garage next to your house.");if(!r)msgT=6;W.saveT=0};
 W.go=a=>{save();engineAudio(false);inCar=null;ui.hud.hidden=true;closePanel();ui.talk.style.display='none';ui.map.style.display='none';W.talk=null;mode='select';umDo(a)};
 W.exit=()=>{save();engineAudio(false);inCar=null;ui.hud.hidden=true;closePanel();ui.talk.style.display='none';ui.map.style.display='none';W.talk=null;goTitle()};
-function save(){const sv=umSV();if(!sv||!W.hero)return;const h=inCar?inCar.pos:W.hero.pos;sv.roam={x:h.x,z:h.z,yaw:W.hero.yaw,car:myCar?{type:myCar.type,x:myCar.pos.x,z:myCar.pos.z,yaw:myCar.yaw}:null};umSave()}
+function save(){const sv=umSV();if(!sv||!W.hero)return;keepCarState();const h=inCar?inCar.pos:W.hero.pos;sv.roam={x:h.x,z:h.z,yaw:W.hero.yaw,car:myCar?{type:myCar.type,x:myCar.pos.x,z:myCar.pos.z,yaw:myCar.yaw}:null};umSave()}
 let lastNear=0;
-W.dbg=()=>({ms:MS,MISSIONS,cars,myCar,inCar,NPCS,ROADS,TOWNS,roadAt,terrainH,spawnCar,setIn:c=>{inCar=c;c.eng=true}});
+W.dbg=()=>({HOMES,BIZ,refuel,mechanic,ms:MS,MISSIONS,cars,myCar,inCar,NPCS,ROADS,TOWNS,roadAt,terrainH,spawnCar,setIn:c=>{inCar=c;c.eng=true}});
 W.frame=dt=>{if(!built)return;dt=Math.min(dt,.05);
-  if(pressedK.has('Escape')){if(W.panelOpen&&lookMode){W.restyle(curLook(umSV()));closeLook()}else if(W.panelOpen)closePanel();else if(ui.map.style.display==='block')ui.map.style.display='none';else{openPanel(`<h2>Paused</h2><p style="opacity:.75">Your progress in the open world is saved automatically.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm" data-close>Resume</button>${MS?'<button class="btn ghost sm" id="rh-abandon">Abandon job</button>':''}<button class="btn ghost sm" id="rh-quit">Save and quit to title</button></div>`);ui.panel.querySelector('#rh-quit').onclick=()=>{closePanel();endMission(false,true);W.exit()};const ab=ui.panel.querySelector('#rh-abandon');if(ab)ab.onclick=()=>{closePanel();endMission(false,true);W.say('Job abandoned.')}}}
+  if(pressedK.has('Escape')){if(W.panelOpen&&lookMode){W.restyle(curLook(umSV()));closeLook()}else if(W.panelOpen)closePanel();else if(ui.map.style.display==='block')ui.map.style.display='none';else{openPanel(`<h2>Paused</h2><p style="opacity:.75">Your progress in the open world is saved automatically.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm" data-close>Resume</button><button class="btn ghost sm" id="rh-money">Your money</button>${MS?'<button class="btn ghost sm" id="rh-abandon">Abandon job</button>':''}<button class="btn ghost sm" id="rh-quit">Save and quit to title</button></div>`);ui.panel.querySelector('#rh-quit').onclick=()=>{closePanel();endMission(false,true);W.exit()};ui.panel.querySelector('#rh-money').onclick=wealth;const ab=ui.panel.querySelector('#rh-abandon');if(ab)ab.onclick=()=>{closePanel();endMission(false,true);W.say('Job abandoned.')}}}
   if(W.mod)W.mod.frame(dt);
   if(pressedK.has('KeyM')){const on=ui.map.style.display!=='block';ui.map.style.display=on?'block':'none';if(on)drawBigMap()}
-  const [pr,act]=interact();
-  if(pressedK.has('KeyE')&&!W.panelOpen){if(W.talk)talk(W.talk);else if(act&&act.startsWith('talk:'))talk(NPCS[+act.split(':')[1]]);else if(act&&act.startsWith('motors:'))motors();else if(act==='garage')garage();else if(act==='board')jobBoard();else if(act==='cat'){MS.cat.following=true;W.sfx('chirp');bubble2('Mrrrow?');missionNext()}else if(act&&act.startsWith('shop:'))lookShop(act.slice(5));else if(act&&act.startsWith('loc:'))W.go(LOCS.find(L=>L.id===act.slice(4)).act)}
+  const [pr,act,eAct]=interact();
+  if(pressedK.has('KeyE')&&!W.panelOpen){if(eAct){if(eAct==='fuel')refuel();else mechanic()}else if(W.talk)talk(W.talk);else if(act&&act.startsWith('talk:'))talk(NPCS[+act.split(':')[1]]);else if(act&&act.startsWith('motors:'))motors();else if(act==='garage')garage();else if(act==='board')jobBoard();else if(act&&act.startsWith('biz:'))bizPanel(BIZ.find(b=>b.id===act.slice(4)));else if(act&&act.startsWith('home:'))homePanel(HOMES.find(x=>x.id===act.slice(5)));else if(act&&act.startsWith('garage:'))garage(HOMES.find(x=>x.id===act.slice(7)).garage);else if(act==='cat'){MS.cat.following=true;W.sfx('chirp');bubble2('Mrrrow?');missionNext()}else if(act&&act.startsWith('shop:'))lookShop(act.slice(5));else if(act&&act.startsWith('loc:'))W.go(LOCS.find(L=>L.id===act.slice(4)).act)}
   if(W.talk&&Math.hypot(W.hero.pos.x-W.talk.pos.x,W.hero.pos.z-W.talk.pos.z)>4){W.talk=null;ui.talk.style.display='none'}
   if(pressedK.has('KeyF')&&!W.panelOpen){if(act==='exit')exitCar();else if(act==='enter'){const c=cars.find(c=>nearDoor(c)&&(c===myCar||!c.locked));if(c){if(c===myCar){W.sfx('chirp');c.flash=.5}enterCar(c)}}}
   if(act==='hotwire'&&keys.has('KeyF')&&hot&&!W.panelOpen){hotT+=dt;if(Math.random()<dt*6)W.sfx('click');
     if(!hot.seen&&!hot.police){for(const f of NPCS){if(Math.hypot(f.pos.x-hot.pos.x,f.pos.z-hot.pos.z)<20){hot.seen=true;bubble(f,NPC_DEFS.indexOf(f.npc)===hot.owner?'Hey! That\'s my car!':'Hey! What are you doing?!');if(NPC_DEFS.indexOf(f.npc)===hot.owner)f.npc.robbed=true;break}}}
     if(hotT>=3.5){hotT=0;const c=hot;c.locked=false;if(c.police){W.say('Hotwired. This one is police business.');enterCar(c);return}c.stolen=true;if(Math.random()<.45||c.seen){c.alarm=7;W.say('The alarm went off! Better drive.')}else W.say('Hotwired. Nobody noticed... this time.');const o=NPC_DEFS[c.owner];if(o)o.robbed=true;enterCar(c)}}else hotT=Math.max(0,hotT-dt*2);
   if(inCar&&pressedK.has('KeyR')&&inCar.flooded){const c=inCar;const rd=roadAt(c.pos.x,c.pos.z);let b=ROADS[0].S[0];let bd=1e9;for(const r of ROADS)for(const s of r.S){if(s.bridge)continue;const d=Math.hypot(s.x-c.pos.x,s.z-c.pos.z);if(d<bd){bd=d;b=s}}c.pos.set(b.x,b.h+.5,b.z);c.flooded=false;c.vx=c.vy=c.w=0;c.eng=true;W.say('The tow truck pulled you back onto the road. That cost you 10 gold.');const sv=umSV();sv.gold=Math.max(0,(sv.gold||0)-10);umSave();engineAudio(true)}
+  if(inCar&&pressedK.has('KeyR')&&!inCar.flooded&&inCar.fuel<=0){const sv=umSV(),pay=Math.min(15,sv.gold||0);sv.gold=(sv.gold||0)-pay;inCar.fuel=.12;inCar.eng=true;engineAudio(true);W.sfx('start');umSave();W.say(pay?'A farmhand brings you a can of fuel. That cost 15 gold.':'A farmhand brings you a can of fuel. Free, this once.')}
   if(inCar&&pressedK.has('KeyH'))W.sfx('horn');if(inCar&&pressedK.has('KeyL')){inCar.lights=!inCar.lights;W.sfx('click')}
   // simulate
   if(inCar){const thr=(keys.has('KeyW')||keys.has('ArrowUp'))&&!W.panelOpen?1:0,brk=(keys.has('KeyS')||keys.has('ArrowDown'))&&!W.panelOpen?1:0,st=((keys.has('KeyA')||keys.has('ArrowLeft'))?1:0)-((keys.has('KeyD')||keys.has('ArrowRight'))?1:0);
@@ -5058,11 +5128,11 @@ W.frame=dt=>{if(!built)return;dt=Math.min(dt,.05);
   const fp=W.focus();for(const f of NPCS){const d=Math.hypot(f.pos.x-fp.x,f.pos.z-fp.z);f.rig.root.visible=d<140&&!f.hidden;if(d<160)npcStep(f,dt,d<70)}
   if(W.fires)W.fires.forEach((f,i)=>{f.scale.y=1+Math.sin(clock*13+i*2)*.18;f.scale.x=f.scale.z=1+Math.sin(clock*9+i)*.1});if(W.gems)W.gems.forEach(g=>{g.rotation.y+=dt*1.2;g.position.y=5+Math.sin(clock*2)*.2});
   {const sv=umSV();LOCS.forEach(L=>{if(!L.beam)return;const ok=!L.req||L.req(sv);L.beam.material.color.set(ok?L.col:'#777777');L.beam.material.opacity=ok?.16+Math.sin(clock*2)*.05:.06;L.ring.material.color.set(ok?L.col:'#777777');L.ring.rotation.z+=dt*.5})}
-  missionTick(dt);questMarks(dt);
+  moneyTick(dt);missionTick(dt);questMarks(dt);
   camStep(dt);sun.position.set(fp.x+60,120,fp.z+40);sun.target.position.set(fp.x,fp.y,fp.z);W.sky.position.copy(camera.position);
   // HUD
   ui.prompt.innerHTML=pr;ui.prompt.style.display=pr&&!W.panelOpen?'flex':'none';
-  if(inCar){ui.speed.style.display='block';ui.speed.querySelector('b').textContent=Math.round(Math.abs(inCar.vx)*3.6);ui.speed.querySelector('small').textContent=(inCar.vx<-.5?'R':inCar.eng?'Gear '+inCar.gear:'Off')+' · km/h · '+inCar.name}else ui.speed.style.display='none';
+  if(inCar){ui.speed.style.display='block';ui.speed.querySelector('b').textContent=Math.round(Math.abs(inCar.vx)*3.6);ui.speed.querySelector('small').textContent=(inCar.vx<-.5?'R':inCar.eng?'Gear '+inCar.gear:'Off')+' · km/h · '+inCar.name+' · '+(inCar.fuel<.15?'⚠ ':'')+'Fuel '+Math.round(inCar.fuel*100)+'%'}else ui.speed.style.display='none';
   const [an,ak]=areaName();if(an!==curArea){curArea=an;ui.area.querySelector('b').textContent=an;ui.area.querySelector('small').textContent=ak;ui.area.classList.add('on');areaT=3.5}if(areaT>0){areaT-=dt;if(areaT<=0)ui.area.classList.remove('on')}
   if(msgT>0){msgT-=dt;if(msgT<=0)ui.msg.classList.remove('on')}
   ui.gold.textContent='◉ '+(umSV().gold||0)+' gold';drawMini();drawBubbles();
