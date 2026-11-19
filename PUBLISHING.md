@@ -23,3 +23,13 @@ This writes:
 
 Change `aether-crucible.html`, run `python3 build.py`, then re-upload `site/` (Netlify), the zip (itch.io), or push (GitHub).
 Raise `NET_VER` in the game file whenever the online code changes, so players on old and new versions are told to refresh instead of joining a broken match.
+
+## Open world code (world.js)
+
+The open world for The Unmarked lives in `world.js`. The game's main code runs inside one private scope,
+so `world.js` is copied into `aether-crucible.html` between the `/*WORLD:BEGIN*/` and `/*WORLD:END*/` markers.
+After editing `world.js`, run:
+
+    python3 sync_world.py
+
+then publish as usual (`build.py` / GitHub Pages and claude.ai both use `aether-crucible.html`).
