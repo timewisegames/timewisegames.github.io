@@ -14,12 +14,22 @@ const TOWNS=[
   {id:'hollow',name:'Hollowbrook Village',x:-520,z:360,r:75},
   {id:'ashford',name:'Ashford Market Town',x:540,z:-380,r:105}];
 TOWNS.forEach(t=>t.h=Math.max(baseH(t.x,t.z),WATER+5));
-function townFlat(x,z,h){for(const t of TOWNS){const d=Math.hypot(x-t.x,z-t.z);const k=sm(t.r+60,t.r,d);if(k>0)h=lerp(h,t.h,k)}return h}
+// places you travel to: clearings flattened into the land
+const SITES=[
+  {id:'emberCamp',x:-128,z:-112,r:20,name:'Bandit Camp',area:'Ember Road'},
+  {id:'emberShrine',x:-38,z:-588,r:24,name:'Ember Shrine',area:'Ember Canyon'},
+  {id:'stormCamp',x:607,z:-509,r:20,name:'Raider Hideout',area:'Cliff Road'},
+  {id:'stormShrine',x:664,z:-748,r:22,name:'Storm Shrine',area:'Stormreach Cliffs'},
+  {id:'iron',x:304,z:668,r:26,name:'Iron Pass Gate',area:'Iron Pass'}];
+SITES.forEach(t=>t.h=Math.max(baseH(t.x,t.z),WATER+4));
+function townFlat(x,z,h){for(const t of TOWNS){const d=Math.hypot(x-t.x,z-t.z);const k=sm(t.r+60,t.r,d);if(k>0)h=lerp(h,t.h,k)}for(const t of SITES){const d=Math.hypot(x-t.x,z-t.z);const k=sm(t.r+35,t.r,d);if(k>0)h=lerp(h,t.h,k)}return h}
 // roads (polylines, densified)
 const ROAD_DEFS=[
   {id:'main',name:'Kingsway Road',w:7.5,pts:[[-520,360],[-470,345],[-410,320],[-340,262],[-262,205],[-180,150],[-110,96],[-30,40],[60,-10],[150,-70],[250,-150],[345,-235],[430,-305],[500,-355],[540,-380]]},
   {id:'canyon',name:'Ember Road',w:6.5,pts:[[-180,150],[-170,40],[-150,-80],[-120,-200],[-90,-330],[-60,-470],[-40,-560]]},
-  {id:'lake',name:'Lakeside Lane',w:5.5,pts:[[-520,360],[-560,420],[-630,470],[-700,505]]}];
+  {id:'lake',name:'Lakeside Lane',w:5.5,pts:[[-520,360],[-560,420],[-630,470],[-700,505]]},
+  {id:'cliff',name:'Cliff Road',w:6,pts:[[540,-380],[560,-430],[585,-480],[598,-520],[612,-570],[632,-640],[652,-700],[662,-735]]},
+  {id:'iron',name:'Iron Pass Road',w:6.5,pts:[[60,-10],[95,80],[140,180],[190,280],[235,390],[268,500],[292,590],[302,650]]}];
 // the Silverrun river
 const RIVER=[[-900,-260],[-640,-180],[-420,-90],[-230,0],[-60,60],[90,160],[260,300],[480,420],[700,500],[900,560]];
 function densify(pts,step){const c=new T.CatmullRomCurve3(pts.map(p=>new T.Vector3(p[0],0,p[1])),false,'catmullrom',.5);const n=Math.max(2,Math.round(c.getLength()/step));return c.getSpacedPoints(n).map(v=>({x:v.x,z:v.z}))}
@@ -118,10 +128,32 @@ function fountain(x,z){const y=groundAt(x,z);mesh(new T.CylinderGeometry(4,4.3,.
 function pump(x,z,yaw){const g=new T.Group();g.position.set(x,groundAt(x,z),z);g.rotation.y=yaw;scene.add(g);mesh(new T.BoxGeometry(.8,1.7,.6),mat('#c8442a'),0,.85,0,0,g);mesh(new T.BoxGeometry(.6,.5,.1),glow('#f4f0e0'),0,1.3,.31,0,g);mesh(new T.CylinderGeometry(.04,.04,.8,6),mat('#222'),.45,.9,0,0,g);addSolid({type:'c',x,z,r:.5})}
 function training(x,z){fence(x-9,z-9,x+9,z-9);fence(x+9,z-9,x+9,z+9);fence(x-9,z+9,x-3,z+9);fence(x+3,z+9,x+9,z+9);fence(x-9,z-9,x-9,z+9);
   for(let i=0;i<3;i++){const dx=x-4+i*4,dz=z-5,y=groundAt(dx,dz);mesh(new T.CylinderGeometry(.12,.12,1.6,8),mat('#6b4a2e'),dx,y+.8,dz);mesh(new T.CylinderGeometry(.35,.35,.9,10),mat('#c9a868'),dx,y+1.35,dz);mesh(new T.SphereGeometry(.28,10,8),mat('#c9a868'),dx,y+2.05,dz);addSolid({type:'c',x:dx,z:dz,r:.4})}}
+function tent(x,z,yaw,c){const y=groundAt(x,z);const t=mesh(new T.ConeGeometry(2.2,2.6,4),mat(c),x,y+1.3,z,yaw+Math.PI/4);t.scale.set(1,1,1.3);addSolid({type:'c',x,z,r:1.9})}
+function campfire(x,z){const y=groundAt(x,z);for(let i=0;i<7;i++){const a=i/7*TAU;mesh(new T.DodecahedronGeometry(.25,0),mat('#6a6a6a'),x+Math.cos(a)*.7,y+.15,z+Math.sin(a)*.7)}for(let i=0;i<3;i++){const l=mesh(new T.CylinderGeometry(.08,.08,1.1,6),mat('#5a3a22'),x,y+.2,z);l.rotation.set(Math.PI/2,i*1.05,0)}
+  const f=mesh(new T.ConeGeometry(.45,1.1,7),glow('#ffb347'),x,y+.65,z);f.castShadow=false;const f2=mesh(new T.ConeGeometry(.28,.8,7),glow('#fff2b0'),x,y+.55,z);f2.castShadow=false;W.fires.push(f,f2);addSolid({type:'c',x,z,r:.8})}
+function brazier(x,z,c){const y=groundAt(x,z);mesh(new T.CylinderGeometry(.5,.3,1.2,10),mat('#4a4a50'),x,y+.6,z);const f=mesh(new T.ConeGeometry(.42,1,8),glow(c),x,y+1.6,z);f.castShadow=false;W.fires.push(f);addSolid({type:'c',x,z,r:.5})}
+function arch(x,z,yaw,c){const g=new T.Group();g.position.set(x,groundAt(x,z),z);g.rotation.y=yaw;scene.add(g);[-1,1].forEach(q=>{mesh(new T.BoxGeometry(1.1,6,1.1),mat('#8a8278'),q*3.2,3,0,0,g)});mesh(new T.BoxGeometry(8.6,1,1.5),mat('#8a8278'),0,6.4,0,0,g);mesh(new T.BoxGeometry(7.4,.5,1.2),mat('#6a645c'),0,5.6,0,0,g);
+  const gem=mesh(new T.OctahedronGeometry(.6),glow(c),0,5,0,0,g);gem.castShadow=false;W.gems.push(gem);[-1,1].forEach(q=>{const sn=Math.sin(yaw),cs=Math.cos(yaw);addSolid({type:'c',x:x+cs*q*3.2,z:z-sn*q*3.2,r:.75})})}
+function buildSites(){W.fires=W.fires||[];W.gems=W.gems||[];const S=Object.fromEntries(SITES.map(t=>[t.id,t]));
+  // bandit camp on Ember Road
+  {const c=S.emberCamp;tent(c.x-7,c.z-5,.3,'#7a4a2a');tent(c.x+6,c.z-7,-.4,'#6a3a2a');tent(c.x+8,c.z+6,.9,'#8a5a3a');campfire(c.x,c.z);crate(c.x-9,c.z+5,1.1);crate(c.x-8,c.z+6.3,.8);barrel(c.x+3,c.z+9);fence(c.x-14,c.z-12,c.x-14,c.z+12)}
+  // Ember Shrine: an ancient stone arch over a fire pit at the end of Ember Road
+  {const c=S.emberShrine,y=groundAt(c.x,c.z);mesh(new T.CylinderGeometry(9,10,.6,24),mat('#8a6a5a'),c.x,y+.3,c.z);arch(c.x,c.z-4,0,'#ff6a2a');brazier(c.x-5,c.z+3,'#ff6a2a');brazier(c.x+5,c.z+3,'#ff6a2a');for(let i=0;i<10;i++){const a=i/10*TAU,r=12+rand(0,4);mesh(new T.ConeGeometry(rand(1,2),rand(4,9),5),mat('#9a4a2a'),c.x+Math.cos(a)*r,y+2,c.z+Math.sin(a)*r-3)}}
+  // raider hideout on Cliff Road
+  {const c=S.stormCamp;tent(c.x-6,c.z+5,0,'#3a4a6a');tent(c.x+7,c.z+3,1,'#2a3a5a');campfire(c.x,c.z);crate(c.x+4,c.z-7,1);barrel(c.x-5,c.z-6);barrel(c.x-6.2,c.z-5)}
+  // Storm Shrine on the high cliffs
+  {const c=S.stormShrine,y=groundAt(c.x,c.z);mesh(new T.CylinderGeometry(8,9,.6,24),mat('#6a7080'),c.x,y+.3,c.z);arch(c.x,c.z-3,0,'#9fd4ff');brazier(c.x-5,c.z+3,'#cfe9ff');brazier(c.x+5,c.z+3,'#cfe9ff');for(let i=0;i<6;i++){const a=i/6*TAU;mesh(new T.CylinderGeometry(.35,.45,5,8),mat('#7a8090'),c.x+Math.cos(a)*7,y+2.5,c.z+Math.sin(a)*7);addSolid({type:'c',x:c.x+Math.cos(a)*7,z:c.z+Math.sin(a)*7,r:.5})}}
+  // Iron Pass gate: stone walls and a great iron door
+  {const c=S.iron,y=groundAt(c.x,c.z),g=new T.Group();g.position.set(c.x,y,c.z+8);scene.add(g);[-1,1].forEach(q=>{mesh(new T.BoxGeometry(14,9,3),mat('#7a7468'),q*10,4.5,0,0,g);mesh(new T.BoxGeometry(4,11,4),mat('#6a645c'),q*4,5.5,0,0,g);addSolid({type:'box',x:c.x+q*10,z:c.z+8,hw:7,hd:1.5,yaw:0});addSolid({type:'box',x:c.x+q*4,z:c.z+8,hw:2,hd:2,yaw:0})});
+    mesh(new T.BoxGeometry(4.2,7,.6),mat('#4a4e58'),0,3.5,0,0,g);for(let i=0;i<5;i++)mesh(new T.BoxGeometry(4.3,.2,.7),mat('#2a2a30'),0,1+i*1.4,0,0,g);addSolid({type:'box',x:c.x,z:c.z+8,hw:2.1,hd:.4,yaw:0});const s=mesh(new T.BoxGeometry(5,1,.1),new T.MeshLambertMaterial({map:signTex('IRON PASS','#4a4e58','#ffd27a',600,120)}),0,8.4,-1.6,0,g);s.castShadow=false;brazier(c.x-6,c.z+3,'#ffb070');brazier(c.x+6,c.z+3,'#ffb070')}
+  // beacons over every place you can go
+  W.beacons=[];LOCS.forEach(L=>{const st=L.site?S[L.site]:null,x=L.x!==undefined?L.x:st.x,z=L.z!==undefined?L.z:st.z,y=groundAt(x,z);L.x=x;L.z=z;
+    const bm=new T.Mesh(new T.CylinderGeometry(1.1,1.1,80,16,1,true),new T.MeshBasicMaterial({color:L.col,transparent:true,opacity:.18,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending}));bm.position.set(x,y+40,z);scene.add(bm);
+    const rg=new T.Mesh(new T.RingGeometry(1.6,2,40),new T.MeshBasicMaterial({color:L.col,transparent:true,opacity:.8,side:T.DoubleSide,depthWrite:false}));rg.rotation.x=-Math.PI/2;rg.position.set(x,y+.08,z);scene.add(rg);L.beam=bm;L.ring=rg})}
 function trees(){const N=2600,trunkG=new T.CylinderGeometry(.18,.28,2.6,6),pineG=new T.ConeGeometry(1.6,4.6,7),roundG=new T.IcosahedronGeometry(2.1,1);
   const trunk=new T.InstancedMesh(trunkG,mat('#6b4a2e'),N),pine=new T.InstancedMesh(pineG,mat('#2f6a3a'),N),round=new T.InstancedMesh(roundG,mat('#4f8a3a'),N);[trunk,pine,round].forEach(m=>{m.castShadow=true;m.receiveShadow=true;scene.add(m)});
   const o=new T.Object3D();let nt=0,np=0,nr=0,tries=0;while(nt<N&&tries<N*12){tries++;const x=rand(-HALF+60,HALF-60),z=rand(-HALF+60,HALF-60);const forest=vn(x*.004+40,z*.004-12);if(forest<-.05&&Math.random()>.12)continue;
-    const h=terrainH(x,z);if(h<WATER+1.5||h>44)continue;if(TOWNS.some(t=>Math.hypot(x-t.x,z-t.z)<t.r+18))continue;const rd=roadAt(x,z);if(rd&&rd.d<rd.r.w/2+6)continue;
+    const h=terrainH(x,z);if(h<WATER+1.5||h>44)continue;if(TOWNS.some(t=>Math.hypot(x-t.x,z-t.z)<t.r+18)||SITES.some(t=>Math.hypot(x-t.x,z-t.z)<t.r+8))continue;const rd=roadAt(x,z);if(rd&&rd.d<rd.r.w/2+6)continue;
     const s=rand(.75,1.35),isPine=vn(x*.01,z*.01)>-.1;o.position.set(x,h+1.3*s,z);o.rotation.set(0,rand(0,TAU),0);o.scale.set(s,s,s);o.updateMatrix();trunk.setMatrixAt(nt++,o.matrix);
     if(isPine){o.position.y=h+(2.6+2)*s;o.updateMatrix();pine.setMatrixAt(np++,o.matrix)}else{o.position.y=h+(2.6+1.4)*s;o.scale.set(s,s*.85,s);o.updateMatrix();round.setMatrixAt(nr++,o.matrix)}addSolid({type:'c',x,z,r:.35*s})}
   trunk.count=nt;pine.count=np;round.count=nr;
@@ -130,7 +162,7 @@ function trees(){const N=2600,trunkG=new T.CylinderGeometry(.18,.28,2.6,6),pineG
 function buildTowns(){const H=TOWNS[0],A=TOWNS[1];
   // ---- Hollowbrook Village: cottages around a green, your home, the training yard and a lake lane
   const hx=H.x,hz=H.z;
-  W.home={x:hx-30,z:hz+24,yaw:Math.PI/2};house(W.home.x,W.home.z,W.home.yaw,{w:9,d:8,wall:'#efe4cc',roof:'#3a5a8a',sign:'Home',signBg:'#3a5a8a'});
+  W.home={x:hx-30,z:hz+24,yaw:Math.PI/2};LOCS[0].x=hx-40;LOCS[0].z=hz-74;house(W.home.x,W.home.z,W.home.yaw,{w:9,d:8,wall:'#efe4cc',roof:'#3a5a8a',sign:'Home',signBg:'#3a5a8a'});
   // garage next to home (open front)
   {const gx=hx-30,gz=hz+38,g=new T.Group();g.position.set(gx,groundAt(gx,gz),gz);g.rotation.y=Math.PI/2;scene.add(g);mesh(new T.BoxGeometry(6.4,3,.3),mat('#d8ccb4'),0,1.5,-3.5,0,g);mesh(new T.BoxGeometry(.3,3,7),mat('#d8ccb4'),-3.2,1.5,0,0,g);mesh(new T.BoxGeometry(.3,3,7),mat('#d8ccb4'),3.2,1.5,0,0,g);mesh(new T.BoxGeometry(6.9,.3,7.4),mat('#3a5a8a'),0,3.15,0,0,g);mesh(new T.BoxGeometry(6.2,.04,7),mat('#8a8278'),0,.06,0,0,g);
     const s=mesh(new T.BoxGeometry(3,.6,.1),new T.MeshLambertMaterial({map:signTex('Garage','#3a5a8a','#f8f0dc',400,96)}),0,2.6,3.6,0,g);s.castShadow=false;
@@ -139,7 +171,7 @@ function buildTowns(){const H=TOWNS[0],A=TOWNS[1];
   cot.forEach(([x,z,y,w,r])=>house(x,z,y,{w:rand(7,9),d:rand(6,7.5),wall:w,roof:r}));
   house(hx+30,hz-40,0,{w:11,d:8,wall:'#d8c8a8',roof:'#5a3a2a',sign:'Hollowbrook Inn',signBg:'#5a3a22'});
   house(hx-26,hz-34,0,{w:9,d:7,wall:'#e8dcc0',roof:'#2f5a3a',sign:'Old Mill Store',signBg:'#2f5a3a'});
-  well(hx,hz);[[-12,-12],[12,-12],[12,12],[-12,12]].forEach(([a,b])=>lamp(hx+a,hz+b));training(hx-40,hz-60);W.yard={x:hx-40,z:hz-60};
+  well(hx,hz);[[-12,-12],[12,-12],[12,12],[-12,12]].forEach(([a,b])=>lamp(hx+a,hz+b));training(hx-40,hz-60);W.yard={x:hx-40,z:hz-60};house(hx-40,hz-80,0,{w:13,d:8,wall:'#e6dccb',roof:'#7a2a2a',sign:"Oren's Gym",signBg:'#7a2a2a'});
   stall(hx+8,hz-14,0,'#c8442a');stall(hx-8,hz+14,Math.PI,'#2f6a8a');[[4,18],[5,19.5],[-16,-4]].forEach(([a,b])=>barrel(hx+a,hz+b));crate(hx+18,hz+2,1);crate(hx+19.2,hz+2.4,.8);
   signpost(hx+58,hz-20,-Math.PI*.75,[['Ashford  →',1],['← Hollowbrook',-1]]);
   // ---- Ashford Market Town: square, fountain, shops, motors, fuel
@@ -154,10 +186,7 @@ function buildTowns(){const H=TOWNS[0],A=TOWNS[1];
   [[-16,-16],[16,-16],[16,16],[-16,16],[0,-20],[0,20],[-20,0],[20,0]].forEach(([a,b])=>lamp(ax+a,az+b));
   stall(ax-10,az-12,0,'#f2c14e');stall(ax+10,az-12,0,'#7fd65a');stall(ax+12,az+12,Math.PI,'#ff9a3d');
   signpost(ax-70,az+40,Math.PI*.25,[['Hollowbrook  →',1],['← Ashford',-1]]);
-  // ember road closed by a rockslide
-  {const r=ROADS.find(r=>r.id==='canyon'),p=r.S[r.S.length-12];for(let i=0;i<9;i++){const x=p.x+rand(-5,5),z=p.z+rand(-3,3),s=rand(1,2.4);mesh(new T.DodecahedronGeometry(s,0),mat('#8a6a5a'),x,groundAt(x,z)+s*.5,z,rand(0,3));addSolid({type:'c',x,z,r:s*.9})}
-    const b=new T.Group();b.position.set(p.x,groundAt(p.x,p.z),p.z+6);scene.add(b);mesh(new T.BoxGeometry(6,.3,.15),mat('#f2f2f2'),0,1,0,0,b);mesh(new T.BoxGeometry(1.6,.3,.16),mat('#c8442a'),-2,1,0,0,b);mesh(new T.BoxGeometry(1.6,.3,.16),mat('#c8442a'),2,1,0,0,b);
-    const s=mesh(new T.BoxGeometry(3.4,.9,.1),new T.MeshLambertMaterial({map:signTex('ROAD CLOSED · ROCKSLIDE','#f2c14e','#2a1a0a',700,120)}),0,1.9,0,0,b);W.rockslide={x:p.x,z:p.z}}}
+  buildSites()}
 
 /* ---------------- sky & lights ---------------- */
 function buildSky(){scene.background=new T.Color('#9cc9ea');scene.fog=new T.Fog('#b9d6ea',140,620);
@@ -173,6 +202,14 @@ const CARS={
   pickup:{name:'Ridgeback Pickup',price:450,color:'#5a6a3a',len:5.2,wid:1.95,hgt:1.85,wb:3.1,wr:.42,mass:1950,power:120000,acc:3.3,brk:7.2,top:46,grip:1,drive:'a',desc:'A tough pickup truck with high clearance. Slow to turn, hard to stop, great on hills.'},
   coupe:{name:'Corsa 72',price:800,color:'#e0a83a',len:4.35,wid:1.8,hgt:1.24,wb:2.55,wr:.33,mass:1220,power:150000,acc:5.4,brk:9.8,top:61,grip:.97,drive:'r',desc:'A classic rear-wheel-drive coupe. Fast, loud and loves to slide.'}};
 W.CARS=CARS;
+// the places in the world where your story happens
+const LOCS=[
+  {id:'gym',act:'spar',col:'#ffd27a',name:"Oren's Gym",prompt:sv=>sv.f.trained?'Spar with Master Oren':'Train with Master Oren'},
+  {id:'emberCamp',site:'emberCamp',act:'ember_camp',col:'#ff8a3d',name:'Bandit Camp',prompt:sv=>'Clear the bandit camp',req:sv=>sv.f.trained,lock:"Train at Oren's Gym in Hollowbrook first."},
+  {id:'emberShrine',site:'emberShrine',act:'ember_shrine',col:'#ff6a2a',name:'Ember Shrine',prompt:sv=>'Take the Trial of Embers',req:sv=>sv.f.trained&&sv.f.emberCamp,lock:'Clear the bandit camp on Ember Road first.'},
+  {id:'stormCamp',site:'stormCamp',act:'storm_camp',col:'#6fb6ff',name:'Raider Hideout',prompt:sv=>'Clear the raider hideout',req:sv=>sv.f.trained,lock:"Train at Oren's Gym in Hollowbrook first."},
+  {id:'stormShrine',site:'stormShrine',act:'storm_shrine',col:'#cfe9ff',name:'Storm Shrine',prompt:sv=>'Take the Trial of Thunder',req:sv=>sv.f.trained&&sv.f.stormCamp,lock:'Clear the raider hideout on Cliff Road first.'},
+  {id:'iron',site:'iron',act:'boss',col:'#ffb070',name:'Iron Pass Gate',prompt:sv=>sv.f.boss?'Challenge Anvil again':'Challenge Anvil, Master of Metal',req:sv=>!!sv.el,lock:'Anvil only fights those who carry an element. Earn one at a shrine first.'}];
 const cars=[];let myCar=null,inCar=null;
 function buildCarMesh(spec,color){const g=new T.Group(),L=spec.len,Wd=spec.wid,body=mat(color),dk=mat('#2a2a30'),chrome=mat('#d0d4da'),glass=new T.MeshPhongMaterial({color:'#2a3a4a',shininess:120,specular:'#9fc4dd',transparent:true,opacity:.85});
   const base=spec.wr+.12,bh=.55,type=spec===CARS.pickup?'pickup':spec===CARS.hatch?'hatch':spec===CARS.coupe?'coupe':'sedan';
@@ -296,14 +333,16 @@ function drawMini(){const cv=ui.mini,x=cv.getContext('2d'),N=mapImg.width,S=cv.w
   x.save();x.clearRect(0,0,S,S);x.translate(S/2,S/2);x.rotate(W.camYaw+Math.PI);x.scale(scale,scale);x.drawImage(mapImg,-cx,-cz);
   const P=(px,pz)=>[(px+HALF)/(HALF*2)*N-cx,(pz+HALF)/(HALF*2)*N-cz];
   if(myCar&&inCar!==myCar){const [a,b]=P(myCar.pos.x,myCar.pos.z);x.fillStyle='#4fe3d0';x.fillRect(a-2.5,b-2.5,5,5)}
+  {const sv=umSV();LOCS.forEach(L=>{const [a,b]=P(L.x,L.z),ok=!L.req||L.req(sv);x.fillStyle=ok?L.col:'#888';x.beginPath();x.arc(a,b,3,0,TAU);x.fill()})}
   x.restore();x.save();x.translate(S/2,S/2);x.rotate(W.camYaw+Math.PI-W.focusYaw());x.fillStyle='#ffd27a';x.strokeStyle='#1a1410';x.lineWidth=2;x.beginPath();x.moveTo(0,-11);x.lineTo(8,9);x.lineTo(0,4);x.lineTo(-8,9);x.closePath();x.fill();x.stroke();x.restore();
   x.save();x.translate(S/2,S/2);x.rotate(W.camYaw+Math.PI);x.fillStyle='#fff';x.font='bold 22px system-ui';x.textAlign='center';x.fillText('N',0,-S/2+26);x.restore()}
 function drawBigMap(){const cv=ui.map.querySelector('canvas'),x=cv.getContext('2d'),S=cv.width;x.clearRect(0,0,S,S);x.drawImage(mapImg,0,0,S,S);const P=(px,pz)=>[(px+HALF)/(HALF*2)*S,(pz+HALF)/(HALF*2)*S];x.font='bold 20px Georgia';x.textAlign='center';
   TOWNS.forEach(t=>{const [a,b]=P(t.x,t.z);x.fillStyle='#1a1410';x.fillText(t.name,a+1,b-26);x.fillStyle='#fff';x.fillText(t.name,a,b-27)});
-  [['Silverrun River',-300,-40],['Whispering Woods',-120,260],['Ember Road (closed)',-60,-470],['Lake Mere',-760,560]].forEach(([n,px,pz])=>{const [a,b]=P(px,pz);x.font='italic 16px Georgia';x.fillStyle='rgba(255,255,255,.85)';x.fillText(n,a,b)});
+  [['Silverrun River',-300,-40],['Whispering Woods',-120,260],['Ember Road',-170,-300],['Lake Mere',-760,560],['Cliff Road',560,-560],['Iron Pass Road',150,250]].forEach(([n,px,pz])=>{const [a,b]=P(px,pz);x.font='italic 16px Georgia';x.fillStyle='rgba(255,255,255,.85)';x.fillText(n,a,b)});
+  const sv=umSV();LOCS.forEach(L=>{const [a,b]=P(L.x,L.z),ok=!L.req||L.req(sv);x.fillStyle=ok?L.col:'#8a8a8a';x.beginPath();x.arc(a,b,7,0,TAU);x.fill();x.strokeStyle='#000';x.lineWidth=2;x.stroke();x.font='bold 14px system-ui';x.fillStyle='#fff';x.fillText(L.name+(ok?'':' 🔒'),a,b+22)});
   const hp=W.focus(),[a,b]=P(hp.x,hp.z);x.fillStyle='#ffd27a';x.beginPath();x.arc(a,b,9,0,TAU);x.fill();x.strokeStyle='#000';x.lineWidth=3;x.stroke();if(myCar&&inCar!==myCar){const [c,d]=P(myCar.pos.x,myCar.pos.z);x.fillStyle='#4fe3d0';x.fillRect(c-6,d-6,12,12);x.fillStyle='#fff';x.font='bold 14px system-ui';x.fillText('Your car',c,d-12)}}
 let msgT=0;W.say=t=>{ui.msg.textContent=t;ui.msg.classList.add('on');msgT=3.2};
-let areaT=0,curArea='';function areaName(){const p=W.focus();for(const t of TOWNS)if(Math.hypot(p.x-t.x,p.z-t.z)<t.r+10)return [t.name,'Town'];const rv=nearest(riverS,riverI,p.x,p.z);if(rv.d<40)return ['Silverrun River','River'];
+let areaT=0,curArea='';function areaName(){const p=W.focus();for(const t of TOWNS)if(Math.hypot(p.x-t.x,p.z-t.z)<t.r+10)return [t.name,'Town'];for(const t of SITES)if(Math.hypot(p.x-t.x,p.z-t.z)<t.r+25)return [t.area,t.name];const rv=nearest(riverS,riverI,p.x,p.z);if(rv.d<40)return ['Silverrun River','River'];
   if(Math.hypot(p.x-LAKE.x,p.z-LAKE.z)<LAKE.r+40)return ['Lake Mere','Lake'];const rd=roadAt(p.x,p.z);if(rd&&rd.d<12)return [rd.r.name,'Road'];if(vn(p.x*.004+40,p.z*.004-12)>-.05)return ['Whispering Woods','Forest'];return ['The Open Valley','Wilds']}
 function bubble(f,t){f.bubble=t;f.bubT=2.6}
 function drawBubbles(){let h='';const v=new T.Vector3();for(const f of NPCS){if(f.bubT>0){f.bubT-=RDT;v.set(f.pos.x,f.pos.y+2.4*(f.size||1),f.pos.z).project(camera);if(v.z<1&&Math.abs(v.x)<1.1&&Math.abs(v.y)<1.1){const r=renderer.domElement.getBoundingClientRect();h+=`<div class="rh-bub" style="left:${(v.x*.5+.5)*r.width}px;top:${(-v.y*.5+.5)*r.height}px">${f.bubble}</div>`}}}ui.bubs.innerHTML=h}
@@ -352,6 +391,7 @@ function enterCar(c){inCar=c;c.eng=true;c.flooded=c.flooded&&c.pos.y<WATER-.5;W.
 function exitCar(){const c=inCar;if(!c)return;if(Math.abs(c.vx)>3){W.say('Slow down before you get out.');return}inCar=null;c.eng=false;c.vx=c.vy=c.w=0;engineAudio(false);W.sfx('door');const s=c.spec,sn=Math.sin(c.yaw),cs=Math.cos(c.yaw);const p={x:c.pos.x-cs*(s.wid/2+.8),z:c.pos.z+sn*(s.wid/2+.8)};collide(p,.4);W.hero.pos.set(p.x,groundAt(p.x,p.z)+.2,p.z);W.hero.vel.set(0,0,0);W.hero.yaw=c.yaw;if(c===myCar)c.lockArm=true}
 function interact(){const h=W.hero;let pr='',act=null;hot=null;
   if(inCar){pr=`<kbd>F</kbd> Get out`;act='exit';if(inCar.flooded)pr+=` · <kbd>R</kbd> Call a tow`;return [pr,act]}
+  const sv=umSV();for(const L of LOCS){if(Math.hypot(h.pos.x-L.x,h.pos.z-L.z)<4.2){const ok=!L.req||L.req(sv);return ok?[`<kbd>E</kbd> ${L.prompt(sv)}`,'loc:'+L.id]:[`🔒 ${L.name}: ${L.lock}`,null]}}
   let bestC=null,bd=99;for(const c of cars){const d=Math.hypot(h.pos.x-c.pos.x,h.pos.z-c.pos.z);if(d<bd&&nearDoor(c)){bd=d;bestC=c}}
   let bestN=null,bn=2.6;for(const f of NPCS){const d=Math.hypot(h.pos.x-f.pos.x,h.pos.z-f.pos.z);if(d<bn){bn=d;bestN=f}}
   if(bestN&&(!bestC||bn<bd)){const D=bestN.npc;if(D.motors)return [`<kbd>E</kbd> Browse cars at Ashford Motors`,'motors:'+NPCS.indexOf(bestN)];return [`<kbd>E</kbd> Talk to ${D.n}`,'talk:'+NPCS.indexOf(bestN)]}
@@ -384,16 +424,17 @@ W.enter=()=>{const sv=umSV();if(!sv)return;audio();sv.cars=sv.cars||['hatch'];sv
   const wasBuilt=built;build();if(!wasBuilt||!W.hero||W.hero.def!==BYID.hero){if(W.hero)scene.remove(W.hero.rig.root);W.hero=mkFighter(BYID.hero,true,0);world.remove(W.hero.rig.root);scene.add(W.hero.rig.root);W.hero.foe=W.hero}
   const r=sv.roam;if(r&&r.x!==undefined){W.hero.pos.set(r.x,groundAt(r.x,r.z),r.z);W.hero.yaw=r.yaw||0}else{W.hero.pos.set(W.home.x+9,groundAt(W.home.x+9,W.home.z),W.home.z);W.hero.yaw=Math.PI/2}
   spawnMyCar(false);inCar=null;W.talk=null;W.panelOpen=false;mode='roam';resetFighters&&0;show(null);$('hud').hidden=true;$('touch').hidden=true;ui.hud.hidden=false;W.camYaw=W.hero.yaw;camPos.copy(W.hero.pos).add(V(0,4,-6));camLook.copy(W.hero.pos);curArea='';
-  W.say(r?'Welcome back.':'This is Hollowbrook. Your car is in the garage next to your home. Ashford is far east along Kingsway Road.');W.saveT=0};
-W.exit=()=>{save();engineAudio(false);inCar=null;ui.hud.hidden=true;closePanel();ui.talk.style.display='none';ui.map.style.display='none';mode='select';umMap()};
+  W.say(r?'':"This is Hollowbrook, your home. Master Oren's gym is on the north side of the village. Your car is in the garage next to your house.");if(!r)msgT=6;W.saveT=0};
+W.go=a=>{save();engineAudio(false);inCar=null;ui.hud.hidden=true;closePanel();ui.talk.style.display='none';ui.map.style.display='none';W.talk=null;mode='select';umDo(a)};
+W.exit=()=>{save();engineAudio(false);inCar=null;ui.hud.hidden=true;closePanel();ui.talk.style.display='none';ui.map.style.display='none';W.talk=null;goTitle()};
 function save(){const sv=umSV();if(!sv||!W.hero)return;const h=inCar?inCar.pos:W.hero.pos;sv.roam={x:h.x,z:h.z,yaw:W.hero.yaw,car:myCar?{type:myCar.type,x:myCar.pos.x,z:myCar.pos.z,yaw:myCar.yaw}:null};umSave()}
 let lastNear=0;
 W.dbg=()=>({cars,myCar,inCar,NPCS,ROADS,TOWNS,roadAt,terrainH,spawnCar,setIn:c=>{inCar=c;c.eng=true}});
 W.frame=dt=>{if(!built)return;dt=Math.min(dt,.05);
-  if(pressedK.has('Escape')){if(W.panelOpen)closePanel();else if(ui.map.style.display==='block')ui.map.style.display='none';else{openPanel(`<h2>Paused</h2><p style="opacity:.75">Your progress in the open world is saved automatically.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm" data-close>Resume</button><button class="btn ghost sm" id="rh-quit">Journey map</button></div>`);ui.panel.querySelector('#rh-quit').onclick=()=>{closePanel();W.exit()}}}
+  if(pressedK.has('Escape')){if(W.panelOpen)closePanel();else if(ui.map.style.display==='block')ui.map.style.display='none';else{openPanel(`<h2>Paused</h2><p style="opacity:.75">Your progress in the open world is saved automatically.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm" data-close>Resume</button><button class="btn ghost sm" id="rh-quit">Save and quit to title</button></div>`);ui.panel.querySelector('#rh-quit').onclick=()=>{closePanel();W.exit()}}}
   if(pressedK.has('KeyM')){const on=ui.map.style.display!=='block';ui.map.style.display=on?'block':'none';if(on)drawBigMap()}
   const [pr,act]=interact();
-  if(pressedK.has('KeyE')&&!W.panelOpen){if(W.talk)talk(W.talk);else if(act&&act.startsWith('talk:'))talk(NPCS[+act.split(':')[1]]);else if(act&&act.startsWith('motors:'))motors();else if(act==='garage')garage()}
+  if(pressedK.has('KeyE')&&!W.panelOpen){if(W.talk)talk(W.talk);else if(act&&act.startsWith('talk:'))talk(NPCS[+act.split(':')[1]]);else if(act&&act.startsWith('motors:'))motors();else if(act==='garage')garage();else if(act&&act.startsWith('loc:'))W.go(LOCS.find(L=>L.id===act.slice(4)).act)}
   if(W.talk&&Math.hypot(W.hero.pos.x-W.talk.pos.x,W.hero.pos.z-W.talk.pos.z)>4){W.talk=null;ui.talk.style.display='none'}
   if(pressedK.has('KeyF')&&!W.panelOpen){if(act==='exit')exitCar();else if(act==='enter'){const c=cars.find(c=>nearDoor(c)&&(c===myCar||!c.locked));if(c){if(c===myCar){W.sfx('chirp');c.flash=.5}enterCar(c)}}}
   if(act==='hotwire'&&keys.has('KeyF')&&hot&&!W.panelOpen){hotT+=dt;if(Math.random()<dt*6)W.sfx('click');
@@ -409,6 +450,8 @@ W.frame=dt=>{if(!built)return;dt=Math.min(dt,.05);
   // your car locks itself when you walk away
   if(myCar&&myCar.lockArm&&!inCar&&Math.hypot(W.hero.pos.x-myCar.pos.x,W.hero.pos.z-myCar.pos.z)>7){myCar.lockArm=false;myCar.locked=true;myCar.flash=.5;syncCar(myCar,0);W.sfx('chirp',.25)}
   const fp=W.focus();for(const f of NPCS){const d=Math.hypot(f.pos.x-fp.x,f.pos.z-fp.z);f.rig.root.visible=d<140;if(d<160)npcStep(f,dt,d<70)}
+  if(W.fires)W.fires.forEach((f,i)=>{f.scale.y=1+Math.sin(clock*13+i*2)*.18;f.scale.x=f.scale.z=1+Math.sin(clock*9+i)*.1});if(W.gems)W.gems.forEach(g=>{g.rotation.y+=dt*1.2;g.position.y=5+Math.sin(clock*2)*.2});
+  {const sv=umSV();LOCS.forEach(L=>{if(!L.beam)return;const ok=!L.req||L.req(sv);L.beam.material.color.set(ok?L.col:'#777777');L.beam.material.opacity=ok?.16+Math.sin(clock*2)*.05:.06;L.ring.material.color.set(ok?L.col:'#777777');L.ring.rotation.z+=dt*.5})}
   camStep(dt);sun.position.set(fp.x+60,120,fp.z+40);sun.target.position.set(fp.x,fp.y,fp.z);W.sky.position.copy(camera.position);
   // HUD
   ui.prompt.innerHTML=pr;ui.prompt.style.display=pr&&!W.panelOpen?'flex':'none';
@@ -417,5 +460,5 @@ W.frame=dt=>{if(!built)return;dt=Math.min(dt,.05);
   if(msgT>0){msgT-=dt;if(msgT<=0)ui.msg.classList.remove('on')}
   ui.gold.textContent='◉ '+(umSV().gold||0)+' gold';drawMini();drawBubbles();
   W.saveT+=dt;if(W.saveT>15){W.saveT=0;save()}
-  pressedK.clear();renderer.render(scene,camera)};
+  pressedK.clear();renderer.setRenderTarget(null);renderer.autoClear=true;camera.layers.enableAll();renderer.render(scene,camera)};
 })();
