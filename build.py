@@ -6,7 +6,7 @@ Reads aether-crucible.html (the same file published on claude.ai) and writes:
   aether-crucible-web.zip  - upload this to itch.io (HTML game) or Netlify Drop
 Run:  python3 build.py
 """
-import os, zipfile
+import os, re, zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'aether-crucible.html')
@@ -35,6 +35,9 @@ HEAD = f"""<!doctype html>
 def main():
     src = open(SRC, encoding='utf-8').read()
     # the claude.ai copy has no document skeleton; the site needs one
+    # mod tools (fly, teleport, speed) are only for the claude.ai copy
+    src, n = re.subn(r'/\*MOD:BEGIN\*/.*?/\*MOD:END\*/', '', src, flags=re.S)
+    assert n == 1, 'mod block not found'
     body = src.replace('<meta charset="utf-8">', '', 1)
     page = HEAD + body.strip() + "\n</html>\n"
     os.makedirs(SITE, exist_ok=True)

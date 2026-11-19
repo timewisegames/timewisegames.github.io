@@ -4837,7 +4837,8 @@ W.camYaw=0;W.camPitch=.32;W.camDist=6.5;let camPos=V(),camLook=V();W.shake=0;
 W.focus=()=>inCar?inCar.pos:W.hero.pos;W.focusYaw=()=>inCar?inCar.yaw:W.hero.yaw;
 function heroStep(dt){const h=W.hero,run=keys.has('ShiftLeft')||keys.has('ShiftRight');let mx=0,mz=0;if(keys.has('KeyW')||keys.has('ArrowUp'))mz+=1;if(keys.has('KeyS')||keys.has('ArrowDown'))mz-=1;if(keys.has('KeyA')||keys.has('ArrowLeft'))mx-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))mx+=1;
   const fwdX=Math.sin(W.camYaw),fwdZ=Math.cos(W.camYaw),rX=Math.cos(W.camYaw),rZ=-Math.sin(W.camYaw);let dx=fwdX*mz-rX*mx,dz=fwdZ*mz-rZ*mx;const l=Math.hypot(dx,dz);
-  const sp=W.talk||W.panelOpen?0:(run?7.2:3.4)*(W.inWater?.45:1);if(l>0){dx/=l;dz/=l}const k=1-Math.exp(-dt*(h.grounded?10:2.5));h.vel.x=lerp(h.vel.x,dx*sp,k);h.vel.z=lerp(h.vel.z,dz*sp,k);
+  if(W.mod&&W.mod.fly){W.mod.flyStep(h,dt,l?dx/l:0,l?dz/l:0);return}
+  const sp=(W.talk||W.panelOpen?0:(run?7.2:3.4)*(W.inWater?.45:1))*(W.mod?W.mod.spd:1);if(l>0){dx/=l;dz/=l}const k=1-Math.exp(-dt*(h.grounded?10:2.5));h.vel.x=lerp(h.vel.x,dx*sp,k);h.vel.z=lerp(h.vel.z,dz*sp,k);
   if(l>0&&sp>0)h.yaw=turnTo(h.yaw,Math.atan2(dx,dz),10*dt);
   if(pressedK.has('Space')&&h.grounded&&!W.talk){h.vel.y=8.2;h.grounded=false;h.jumps=1}h.vel.y-=22*dt;
   h.pos.x+=h.vel.x*dt;h.pos.z+=h.vel.z*dt;const p={x:h.pos.x,z:h.pos.z};collide(p,.4);for(const c of cars){const cx=c.pos.x,cz=c.pos.z,sn=Math.sin(c.yaw),cs=Math.cos(c.yaw),lx=(p.x-cx)*cs-(p.z-cz)*sn,lz=(p.x-cx)*sn+(p.z-cz)*cs,hw=c.spec.wid/2+.4,hd=c.spec.len/2+.4;if(Math.abs(lx)<hw&&Math.abs(lz)<hd){const ex=hw-Math.abs(lx),ez=hd-Math.abs(lz);let nlx=lx,nlz=lz;if(ex<ez)nlx=Math.sign(lx)*hw;else nlz=Math.sign(lz)*hd;p.x=cx+nlx*cs+nlz*sn;p.z=cz-nlx*sn+nlz*cs}}
@@ -4993,9 +4994,31 @@ function questMarks(dt){let h='';const v=new T.Vector3(),r=renderer.domElement.g
     if(MS){const st=MS.m.steps[MS.step],t=st.at&&st.at();if(t&&Math.abs(t.x-n.pos.x)<.5&&Math.abs(t.z-n.pos.z)<.5)mk='?'}else if(MISSIONS.some(m=>m.giver===n.npc.n&&missionOpen(m)))mk='!';
     if(!mk)continue;v.set(n.pos.x,n.pos.y+2.55*(n.size||1)+Math.sin(clock*3)*.08,n.pos.z).project(camera);if(v.z<1&&Math.abs(v.x)<1.1&&Math.abs(v.y)<1.1)h+=`<div class="rh-qm" style="left:${(v.x*.5+.5)*r.width}px;top:${(-v.y*.5+.5)*r.height}px">${mk}</div>`}ui.qms.innerHTML=h}
 
+/*MOD:BEGIN*/
+/* ---------------- mod tools (claude.ai copy only; build.py strips this block from the website) ---------------- */
+W.mod={on:true,fly:false,spd:1,turbo:false,mapTp:true};
+W.mod.tp=(x,z,quiet)=>{const p={x,z};collide(p,.6);const y=groundAt(p.x,p.z);if(inCar){inCar.pos.set(p.x,Math.max(y,WATER)+.6,p.z);inCar.vx=inCar.vy=inCar.w=0;inCar.vyU=0;syncCar(inCar,0)}else{const h=W.hero;h.pos.set(p.x,W.mod.fly?Math.max(y,WATER)+3:Math.max(y,WATER-1)+.2,p.z);h.vel.set(0,0,0)}camPos.set(p.x+.01,y+6,p.z+.01);if(!quiet)W.say('Teleported.')};
+W.mod.flyStep=(h,dt,dx,dz)=>{const fast=keys.has('ShiftLeft')||keys.has('ShiftRight'),sp=(fast?75:28)*(W.panelOpen?0:1);let vy=0;if(!W.panelOpen){if(keys.has('Space'))vy+=1;if(keys.has('KeyC')||keys.has('ControlLeft'))vy-=1}
+  h.pos.x+=dx*sp*dt;h.pos.z+=dz*sp*dt;h.pos.y+=vy*sp*.7*dt;const e=HALF-40;h.pos.x=clamp(h.pos.x,-e,e);h.pos.z=clamp(h.pos.z,-e,e);const g=Math.max(groundAt(h.pos.x,h.pos.z),WATER-1.1);if(h.pos.y<g)h.pos.y=g;h.pos.y=Math.min(h.pos.y,260);
+  h.vel.set(0,0,0);h.grounded=h.pos.y<=g+.05;W.inWater=false;if(dx||dz)h.yaw=turnTo(h.yaw,Math.atan2(dx,dz),10*dt);h.st='free';h.status=h.status||{};animate(h,dt);h.rig.aura.visible=false;h.rig.root.position.copy(h.pos);h.rig.root.visible=!inCar};
+W.mod.frame=dt=>{if(pressedK.has('KeyN')){if(W.panelOpen&&W.mod.panel)closePanel();else if(!W.panelOpen)W.mod.menu()}if(!W.panelOpen&&pressedK.has('KeyG')&&!inCar){W.mod.fly=!W.mod.fly;W.say(W.mod.fly?'Fly mode ON · Space up · C down · Shift fast':'Fly mode OFF');if(!W.mod.fly){const h=W.hero;h.vel.set(0,0,0)}}
+  if(!W.panelOpen)W.mod.panel=false;
+  if(W.mod.turbo&&inCar&&!W.panelOpen&&(keys.has('KeyW')||keys.has('ArrowUp'))&&!inCar.flooded&&inCar.vx>-1)inCar.vx=Math.min(inCar.vx+dt*14,62);
+  W.mod.badge.textContent=`MOD${W.mod.fly?' · FLY':''}${W.mod.spd>1?' · '+W.mod.spd+'× SPEED':''}${W.mod.turbo?' · TURBO':''} · N menu`};
+W.mod.places=()=>{const L=[['Hollowbrook',TOWNS[0].x+4,TOWNS[0].z+8],['Ashford',TOWNS[1].x+6,TOWNS[1].z+10],["Oren's Gym",W.yard.x,W.yard.z+5],['Ashford Motors',W.motors.x,W.motors.z+8],['Home garage',W.garage.x+4,W.garage.z],['Lake Mere shore',LAKE.x+LAKE.r+14,LAKE.z],['Whispering Woods',-120,260]];
+  LOCS.forEach(o=>{if(o.id!=='gym')L.push([o.name,o.x+5,o.z+5])});if(myCar&&inCar!==myCar)L.push(['Your car',myCar.pos.x+3,myCar.pos.z]);if(MS&&wp&&wp.visible)L.unshift(['★ Current job target',wp.position.x+2,wp.position.z+2]);return L};
+W.mod.menu=()=>{const P=W.mod.places();openPanel(`<h2>Mod tools</h2><p style="opacity:.75;margin:0">Only in the claude.ai copy. The website version doesn't have these.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn sm ${W.mod.fly?'':'ghost'}" data-m="fly">Fly (G): ${W.mod.fly?'ON':'OFF'}</button><button class="btn sm ${W.mod.spd>1?'':'ghost'}" data-m="spd">Run speed: ${W.mod.spd}×</button><button class="btn sm ${W.mod.turbo?'':'ghost'}" data-m="turbo">Car turbo: ${W.mod.turbo?'ON':'OFF'}</button><button class="btn sm ${W.mod.mapTp?'':'ghost'}" data-m="maptp">Click the map (M) to teleport: ${W.mod.mapTp?'ON':'OFF'}</button></div>
+  <b style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ffd27a">Teleport</b><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin-top:6px">${P.map((p,i)=>`<button class="btn ghost sm" data-tp="${i}">${p[0]}</button>`).join('')}</div>
+  <div style="text-align:right;margin-top:12px"><button class="btn ghost sm" data-close>Close (N)</button></div>`);W.mod.panel=true;
+  ui.panel.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const k=b.dataset.m;if(k==='fly'){if(inCar){W.say('Get out of the car to fly.');return}W.mod.fly=!W.mod.fly}else if(k==='spd')W.mod.spd=W.mod.spd===1?2:W.mod.spd===2?4:1;else if(k==='turbo')W.mod.turbo=!W.mod.turbo;else W.mod.mapTp=!W.mod.mapTp;W.mod.menu()});
+  ui.panel.querySelectorAll('[data-tp]').forEach(b=>b.onclick=()=>{const p=P[+b.dataset.tp];closePanel();W.mod.tp(p[1],p[2],true);W.say('Teleported to '+p[0]+'.')})};
+W.modSetup=()=>{const b=document.createElement('div');b.style.cssText='position:absolute;left:50%;top:10px;transform:translateX(-50%);font:800 11px system-ui;letter-spacing:.12em;color:#9ff0c8;background:rgba(10,40,30,.7);border:1px solid rgba(159,240,200,.5);border-radius:99px;padding:4px 12px;pointer-events:none';ui.hud.appendChild(b);W.mod.badge=b;
+  const cv=ui.map.querySelector('canvas');cv.style.cursor='crosshair';cv.addEventListener('click',e=>{if(!W.mod.mapTp)return;const r=cv.getBoundingClientRect(),s=Math.min(r.width,r.height),ox=r.left+(r.width-s)/2,oy=r.top+(r.height-s)/2,u=(e.clientX-ox)/s,v=(e.clientY-oy)/s;if(u<0||u>1||v<0||v>1)return;W.mod.tp(-HALF+u*HALF*2,-HALF+v*HALF*2,true);ui.map.style.display='none';W.say('Teleported.')})};
+/*MOD:END*/
 /* ---------------- main ---------------- */
 function build(){if(built)return;built=true;scene=new T.Scene();camera=new T.PerspectiveCamera(58,innerWidth/innerHeight,.1,1600);buildSky();buildTerrain();buildRoads();trees();buildTowns();buildMapImage();buildUI();
-  NPC_DEFS.forEach((D,i)=>mkNpc(D,i));parkedCars();
+  NPC_DEFS.forEach((D,i)=>mkNpc(D,i));parkedCars();if(W.modSetup)W.modSetup();
   addEventListener('keydown',e=>{if(mode!=='roam')return;if(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab'].includes(e.code))e.preventDefault();if(!e.repeat)pressedK.add(e.code);keys.add(e.code)});
   addEventListener('keyup',e=>{if(mode!=='roam')return;keys.delete(e.code)});
   renderer.domElement.addEventListener('pointerdown',e=>{if(mode!=='roam')return;mdown=true;lastMX=e.clientX;lastMY=e.clientY});addEventListener('pointerup',()=>{mdown=false});
@@ -5014,6 +5037,7 @@ let lastNear=0;
 W.dbg=()=>({ms:MS,MISSIONS,cars,myCar,inCar,NPCS,ROADS,TOWNS,roadAt,terrainH,spawnCar,setIn:c=>{inCar=c;c.eng=true}});
 W.frame=dt=>{if(!built)return;dt=Math.min(dt,.05);
   if(pressedK.has('Escape')){if(W.panelOpen&&lookMode){W.restyle(curLook(umSV()));closeLook()}else if(W.panelOpen)closePanel();else if(ui.map.style.display==='block')ui.map.style.display='none';else{openPanel(`<h2>Paused</h2><p style="opacity:.75">Your progress in the open world is saved automatically.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm" data-close>Resume</button>${MS?'<button class="btn ghost sm" id="rh-abandon">Abandon job</button>':''}<button class="btn ghost sm" id="rh-quit">Save and quit to title</button></div>`);ui.panel.querySelector('#rh-quit').onclick=()=>{closePanel();endMission(false,true);W.exit()};const ab=ui.panel.querySelector('#rh-abandon');if(ab)ab.onclick=()=>{closePanel();endMission(false,true);W.say('Job abandoned.')}}}
+  if(W.mod)W.mod.frame(dt);
   if(pressedK.has('KeyM')){const on=ui.map.style.display!=='block';ui.map.style.display=on?'block':'none';if(on)drawBigMap()}
   const [pr,act]=interact();
   if(pressedK.has('KeyE')&&!W.panelOpen){if(W.talk)talk(W.talk);else if(act&&act.startsWith('talk:'))talk(NPCS[+act.split(':')[1]]);else if(act&&act.startsWith('motors:'))motors();else if(act==='garage')garage();else if(act==='board')jobBoard();else if(act==='cat'){MS.cat.following=true;W.sfx('chirp');bubble2('Mrrrow?');missionNext()}else if(act&&act.startsWith('shop:'))lookShop(act.slice(5));else if(act&&act.startsWith('loc:'))W.go(LOCS.find(L=>L.id===act.slice(4)).act)}

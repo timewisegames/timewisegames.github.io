@@ -33,3 +33,6 @@ After editing `world.js`, run:
     python3 sync_world.py
 
 then publish as usual (`build.py` / GitHub Pages and claude.ai both use `aether-crucible.html`).
+
+## Mod tools (claude.ai only)
+The open world has a mod menu (N: fly, run speed, car turbo, teleport, click-the-map teleport) between `/*MOD:BEGIN*/` and `/*MOD:END*/` in world.js. `build.py` strips that block, so the website never gets it.
